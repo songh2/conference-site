@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이메일 주소 보호값 만들기</title>
+<style>
+  body { max-width: 720px; margin: 40px auto; padding: 0 20px; font: 16px/1.6 system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; color: #1b2230; }
+  h1 { font-size: 1.4rem; }
+  label { display: block; font-weight: 600; margin-top: 18px; }
+  input, textarea { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border: 1px solid #bbb; border-radius: 8px; }
+  textarea { height: 110px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px; }
+  .row { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+  button { font: inherit; padding: 9px 16px; border-radius: 999px; border: 1px solid #173a5e; background: #173a5e; color: #fff; cursor: pointer; }
+  button.secondary { background: #fff; color: #173a5e; }
+  .note { background: #f6f3ea; border: 1px solid #e5dcc3; border-radius: 10px; padding: 12px 16px; font-size: .95rem; }
+  code { background: #f2f2f2; padding: 1px 5px; border-radius: 4px; }
+  .out { margin-top: 6px; }
+  .err { color: #b3261e; }
+</style>
+</head>
+<body>
+<h1>이메일 주소 보호값(<code>email_enc</code>) 만들기</h1>
+<p class="note">
+  이 페이지는 컴퓨터에서 바로 열어도 동작하며, 입력한 내용은 어디에도 전송되지 않습니다.
+  <br>용도: <code>build.py</code>(파이썬)를 쓸 수 없을 때, GitHub 웹 화면에서 <code>conference.json</code> 을 직접 고치면서
+  위원·발표자·문의처의 이메일을 넣을 때 씁니다. 평문 <code>"email": "..."</code> 대신
+  아래에서 만든 값을 <code>"email_enc": "v1:..."</code> 로 적으면 방문자가 확인 코드를 입력해야만 주소가 보입니다.
+  <br><b>주의</b>: 이것은 암호화가 아니라 자동 수집기를 피하는 난독화입니다. 페이지 코드를 읽으면 되돌릴 수 있습니다.
+</p>
+
+<label for="slug">사이트 slug (conference.json 의 "slug" 값과 똑같이)</label>
+<input id="slug" placeholder="예) example-2027" autocomplete="off" spellcheck="false">
+
+<label for="emails">이메일 주소 (여러 개면 한 줄에 하나씩)</label>
+<textarea id="emails" placeholder="gildong@example.org&#10;office@example.org" spellcheck="false"></textarea>
+
+<div class="row">
+  <button type="button" id="go">보호값 만들기</button>
+  <button type="button" class="secondary" id="check">되돌려서 확인</button>
+</div>
+
+<label for="result">결과 — 이 값을 conference.json 의 <code>email_enc</code> 에 붙여 넣으세요</label>
+<textarea id="result" readonly></textarea>
+<p id="msg" class="out"></p>
+
+<script>
+// scripts/emailcodec.py 및 template/app.js 와 같은 규칙(v1):
+// 주소를 뒤집고 → 각 바이트를 slug 의 글자 코드로 XOR → base64 → 앞에 "v1:"
+function keyBytes(slug) {
+  var k = (slug || 'site').replace(/[^\x00-\x7f]/g, '');
+  if (!k) k = 'site';
+  var out = [];
+  for (var i = 0; i < k.length; i++) out.push(k.charCodeAt(i));
+  return out;
+}
+function utf8(str) { return Array.prototype.slice.call(new TextEncoder().encode(str)); }
+function fromUtf8(bytes) { return new TextDecoder().decode(new Uint8Array(bytes)); }
+function reverseStr(s) { return Array.from(s).reverse().join(''); }
+function encode(email, slug) {
+  var key = keyBytes(slug), data = utf8(reverseStr(email.trim()));
+  var x = data.map(function (b, i) { return b ^ key[i % key.length]; });
+  return 'v1:' + btoa(String.fromCharCode.apply(null, x));
+}
+function decode(enc, slug) {
+  var key = keyBytes(slug), raw = atob(enc.replace(/^v1:/, ''));
+  var bytes = [];
+  for (var i = 0; i < raw.length; i++) bytes.push(raw.charCodeAt(i) ^ key[i % key.length]);
+  return reverseStr(fromUtf8(bytes));
+}
+var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+document.getElementById('go').addEventListener('click', function () {
+  var slug = document.getElementById('slug').value.trim();
+  var lines = document.getElementById('emails').value.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+  var msg = document.getElementById('msg'); msg.className = 'out'; msg.textContent = '';
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(slug)) { msg.className = 'out err'; msg.textContent = 'slug 는 소문자·숫자·하이픈만 쓰며 conference.json 의 slug 와 같아야 합니다.'; return; }
+  if (!lines.length) { msg.className = 'out err'; msg.textContent = '이메일 주소를 입력하세요.'; return; }
+  var bad = lines.filter(function (l) { return !EMAIL_RE.test(l); });
+  if (bad.length) { msg.className = 'out err'; msg.textContent = '주소 형식이 이상합니다: ' + bad.join(', '); return; }
+  document.getElementById('result').value = lines.map(function (l) { return l + '  →  "email_enc": "' + encode(l, slug) + '"'; }).join('\n');
+  msg.textContent = lines.length + '개 변환했습니다. 되돌려서 확인 버튼으로 검산할 수 있습니다.';
+});
+document.getElementById('check').addEventListener('click', function () {
+  var slug = document.getElementById('slug').value.trim();
+  var msg = document.getElementById('msg'); msg.className = 'out';
+  var vals = (document.getElementById('result').value.match(/v1:[A-Za-z0-9+\/=]+/g) || []);
+  if (!vals.length) { msg.className = 'out err'; msg.textContent = '먼저 보호값을 만드세요.'; return; }
+  try { msg.textContent = '되돌린 결과: ' + vals.map(function (v) { return decode(v, slug); }).join(', '); }
+  catch (e) { msg.className = 'out err'; msg.textContent = '되돌리지 못했습니다: ' + e.message; }
+});
+</script>
+</body>
+</html>

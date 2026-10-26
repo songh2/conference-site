@@ -1,0 +1,166 @@
+{
+  "slug": "SLUG",
+  "lang_default": "ko",
+  "email_protection": "captcha",
+  "theme": "default",
+  "logo": {
+    "src": "",
+    "alt": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "title": {
+    "ko": "",
+    "en": ""
+  },
+  "short_title": {
+    "ko": "",
+    "en": ""
+  },
+  "subtitle": {
+    "ko": "",
+    "en": ""
+  },
+  "kicker": {
+    "ko": "",
+    "en": ""
+  },
+  "dates": {
+    "start": "",
+    "end": "",
+    "display": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "venue": {
+    "name": {
+      "ko": "",
+      "en": ""
+    },
+    "room": {
+      "ko": "",
+      "en": ""
+    },
+    "address": {
+      "ko": "",
+      "en": ""
+    },
+    "map_url": "",
+    "lat": null,
+    "lng": null,
+    "directions": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "host": {
+    "ko": "",
+    "en": ""
+  },
+  "hero": {
+    "image": "",
+    "credit": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "about": {
+    "ko": "",
+    "en": ""
+  },
+  "notices": [],
+  "committees": [
+    {
+      "name": {
+        "ko": "조직위원회",
+        "en": "Organizing Committee"
+      },
+      "members": [
+        {
+          "name": {
+            "ko": "",
+            "en": ""
+          },
+          "affiliation": {
+            "ko": "",
+            "en": ""
+          },
+          "url": "",
+          "email": ""
+        }
+      ]
+    }
+  ],
+  "speakers": [],
+  "program": [
+    {
+      "date": "",
+      "label": {
+        "ko": "",
+        "en": ""
+      },
+      "tentative": false,
+      "note": {
+        "ko": "",
+        "en": ""
+      },
+      "items": [
+        {
+          "time": "",
+          "title": {
+            "ko": "",
+            "en": ""
+          },
+          "speaker_id": "",
+          "speaker": {
+            "ko": "",
+            "en": ""
+          },
+          "kind": "talk",
+          "tentative": false
+        }
+      ]
+    }
+  ],
+  "registration": {
+    "form_url": "",
+    "embed": false,
+    "status": "auto",
+    "deadline": "",
+    "deadline_display": {
+      "ko": "",
+      "en": ""
+    },
+    "fee": {
+      "ko": "",
+      "en": ""
+    },
+    "note": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "participants": [],
+  "participants_url": "",
+  "participants_note": {
+    "ko": "",
+    "en": ""
+  },
+  "accommodation": {
+    "ko": "",
+    "en": ""
+  },
+  "downloads": [],
+  "gallery": [],
+  "sponsors": [],
+  "contact": [],
+  "footer": {
+    "ko": "",
+    "en": ""
+  },
+  "footer_url": "",
+  "updated": "",
+  "_todo": []
+}

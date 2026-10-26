@@ -1,0 +1,13 @@
+{
+  "id": "slate",
+  "name": { "ko": "슬레이트 (회청·하늘)", "en": "Slate (blue-gray & sky)" },
+  "status": "verified",
+  "source": "이 템플릿의 범용 배색. 특정 기관의 공식 색이 아님.",
+  "note": { "ko": "고딕 제목, 회청색 바탕. 공학·정보·경영 계열의 현대적인 느낌.", "en": "Sans-serif headings on blue-gray; a modern look for engineering, IT or business events." },
+  "vars": {
+    "--primary": "#2f4a63", "--primary-deep": "#1e3242", "--hero-end": "#4b7295",
+    "--accent": "#8ecae6", "--accent-hover": "#a9d8ee", "--accent-soft": "#e3f2fa", "--accent-ink": "#06202e",
+    "--font-head": "\"Noto Sans KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", system-ui, sans-serif",
+    "--radius": "8px", "--radius-sm": "5px"
+  }
+}

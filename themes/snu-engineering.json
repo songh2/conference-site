@@ -1,0 +1,21 @@
+{
+  "id": "snu-engineering",
+  "name": { "ko": "서울대학교 공과대학", "en": "SNU College of Engineering" },
+  "status": "verified",
+  "source": "https://eng.snu.ac.kr/en/about/engineering/UI (2026-10-27 확인): SENG Orange = Pantone Orange 021C, RGB 247/143/30 (#f78f1e); SENG Gray 10C = Pantone Cool Gray 10C, RGB 129/128/134 (페이지에 #818085 로 표기)",
+  "note": {
+    "ko": "주황(#f78f1e)·회색(#818085)은 공과대학 UI 페이지의 공식 값입니다. 본문 글자색·진한 회색 등 나머지는 가독성을 위해 이 템플릿에서 정한 값이며 공식 색이 아닙니다. 로고는 포함하지 않습니다(사용 권한이 있는 파일을 logo 항목에 직접 넣으세요).",
+    "en": "Orange #f78f1e and gray #818085 are the official values on the College of Engineering UI page. The remaining neutrals were chosen for legibility by this template and are not official. No logo is bundled."
+  },
+  "vars": {
+    "--primary": "#4b4b52",
+    "--primary-deep": "#2b2b30",
+    "--hero-end": "#818085",
+    "--accent": "#f78f1e",
+    "--accent-hover": "#f9a54b",
+    "--accent-soft": "#fde9d2",
+    "--accent-ink": "#1f1300",
+    "--muted": "#818085",
+    "--font-head": "\"Noto Sans KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", system-ui, sans-serif"
+  }
+}

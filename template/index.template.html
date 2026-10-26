@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<meta name="description" content="{{DESCRIPTION}}">
+<meta property="og:title" content="{{TITLE}}">
+<meta property="og:description" content="{{DESCRIPTION}}">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
+<style>
+{{CSS}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header" id="top">
+  <div class="wrap header-inner">
+    <a class="brand" href="#top" id="brand"></a>
+    <button class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="site-nav">
+      <span class="menu-icon" aria-hidden="true"></span><span id="menu-label"></span>
+    </button>
+    <nav class="site-nav" id="site-nav" aria-label="Main"></nav>
+    <div class="lang-switch" role="group" id="lang-switch" aria-label="Language">
+      <button type="button" class="lang-btn" data-lang="ko" aria-pressed="false">한국어</button>
+      <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">English</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <noscript>
+    <section class="section">
+      <div class="wrap">
+        <h1>{{TITLE}}</h1>
+        <p>{{NOSCRIPT_INFO}}</p>
+        <p>This page needs JavaScript to display the full programme. / 전체 내용을 보려면 자바스크립트를 켜 주세요.</p>
+      </div>
+    </section>
+  </noscript>
+  <div id="app" aria-live="polite"></div>
+</main>
+
+<footer class="site-footer" id="site-footer"></footer>
+
+<script id="site-data" type="application/json">{{DATA_JSON}}</script>
+<script>
+{{JS}}
+</script>
+</body>
+</html>

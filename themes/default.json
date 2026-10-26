@@ -1,0 +1,8 @@
+{
+  "id": "default",
+  "name": { "ko": "기본 (남색·금색)", "en": "Default (navy & gold)" },
+  "status": "verified",
+  "source": "이 템플릿의 기본 배색. 특정 기관의 공식 색이 아님.",
+  "note": { "ko": "명조 제목 + 남색 바탕. 어느 기관에나 무난합니다.", "en": "Serif headings on navy. Neutral enough for any institution." },
+  "vars": {}
+}

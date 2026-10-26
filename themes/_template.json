@@ -1,0 +1,19 @@
+{
+  "id": "my-college",
+  "name": { "ko": "OO대학교 OO대학", "en": "College of X, Y University" },
+  "status": "draft",
+  "source": "색상 값을 가져온 곳 (예: 단과대학 UI 안내 페이지 주소, 확인 날짜)",
+  "note": {
+    "ko": "어떤 값이 공식이고 어떤 값이 임의로 정한 것인지 적어 두세요. 로고 파일은 테마에 넣지 말고 각 사이트의 logo 항목에 넣습니다.",
+    "en": "Record which values are official and which were chosen for legibility."
+  },
+  "vars": {
+    "--primary": "#173a5e",
+    "--primary-deep": "#0f2a46",
+    "--hero-end": "#2b5a86",
+    "--accent": "#b9893b",
+    "--accent-hover": "#c99a4e",
+    "--accent-soft": "#f6ecd8",
+    "--accent-ink": "#1b1300"
+  }
+}

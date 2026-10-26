@@ -1,0 +1,12 @@
+{
+  "id": "forest",
+  "name": { "ko": "숲 (짙은 녹색·연두)", "en": "Forest (deep green)" },
+  "status": "verified",
+  "source": "이 템플릿의 범용 배색. 특정 기관의 공식 색이 아님.",
+  "note": { "ko": "자연과학·환경·농생명 계열 행사에 어울리는 녹색 계열.", "en": "Green palette suited to science, environment or agriculture events." },
+  "vars": {
+    "--primary": "#1f5a3c", "--primary-deep": "#143d29", "--hero-end": "#2f7a52",
+    "--accent": "#c9d85a", "--accent-hover": "#d8e47a", "--accent-soft": "#eef3d2", "--accent-ink": "#1a2200",
+    "--ok": "#1f5a3c"
+  }
+}
