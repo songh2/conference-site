@@ -18,6 +18,8 @@
 [검사·보고] 코드를 실행할 수 있으면 python3 scripts/validate.py sites/<slug>/conference.json 과 python3 scripts/build.py sites/<slug> --deploy dist/<slug> 를 돌리고, ERROR 는 고치고 WARN 은 "확인 필요 목록"으로 보고한다. 실행할 수 없으면 schema.md 기준으로 스스로 점검한다(필수 항목, 날짜 형식, ko/en 누락, speaker_id 연결).
 보고 순서: 1) 만든 파일 2) 확인 필요 목록(_todo + 경고) 3) 다음 단계(GitHub 에 올리기: docs/manual-github-pages.md, 등록 양식: docs/manual-google-sheet.md).
 
+[포스터] "포스터 만들어 줘"는 같은 conference.json 으로 scripts/make_poster.py 를 실행한다(배치 program/speakers/lecture/photo, A1~A4, docs/poster.md). 코드를 실행할 수 없으면 scripts/export_open_design.py 의 브리프 형식(사실 정보 목록 + 규칙)으로 포스터 작업 지시서를 써 주고, 사실을 지어내지 않는다. 실존 인물 사진을 생성하지 않는다.
+
 [수정 요청] "일정 바꿔 줘", "연사 추가", "행사 끝났으니 발표자료 올려 줘" 는 conference.json 만 고친다. index.html 을 직접 고치지 않는다.
 
 [하지 말 것] 자료에 없는 내용 채우기, 사람 이름 영문 임의 변환, 개인정보를 공개 파일에 쓰기, 템플릿(template/)을 사이트 하나 때문에 고치기, 법률 자문처럼 보이는 단정(개인정보 안내문은 초안임을 밝힌다).

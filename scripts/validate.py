@@ -274,6 +274,45 @@ def validate(data):
                 if not (isinstance(logo.get("alt"), dict) and (logo["alt"].get("ko") or logo["alt"].get("en"))):
                     warnings.append("logo.alt(기관명 등 대체 텍스트)가 비어 있습니다. 화면 낭독기 사용자를 위해 채우세요")
 
+    # 홈페이지 주소 (포스터 QR 코드에 쓰임)
+    su = data.get("site_url")
+    if su and not str(su).startswith(("https://", "http://")):
+        errors.append(f"site_url 은 http(s):// 로 시작하는 주소여야 합니다 → {su!r}")
+
+    # 연사 사진·구분 (포스터에서 사용)
+    for i, s in enumerate(data.get("speakers") or []):
+        if s.get("photo"):
+            check_url(f"speakers[{i}].photo", s.get("photo"), warnings)
+        if "group" in s:
+            check_bilingual(f"speakers[{i}].group", s.get("group"), errors, warnings)
+
+    # 포스터 설정 (scripts/make_poster.py)
+    poster = data.get("poster")
+    if poster not in (None, {}):
+        if not isinstance(poster, dict):
+            errors.append("poster 는 객체여야 합니다")
+        else:
+            if poster.get("layout") not in (None, "", "auto", "program", "speakers", "lecture", "photo"):
+                errors.append("poster.layout 은 auto, program, speakers, lecture, photo 중 하나입니다")
+            if str(poster.get("size") or "A2").upper() not in ("A1", "A2", "A3", "A4"):
+                errors.append("poster.size 는 A1, A2, A3, A4 중 하나입니다")
+            if poster.get("lang") not in (None, "", "ko", "en", "both"):
+                errors.append("poster.lang 은 ko, en, both 중 하나입니다")
+            for k in ("headline", "kicker", "note"):
+                if k in poster:
+                    check_bilingual(f"poster.{k}", poster.get(k), errors, warnings)
+            for j, hl in enumerate(poster.get("highlights") or []):
+                check_bilingual(f"poster.highlights[{j}]", hl, errors, warnings)
+            if poster.get("image"):
+                check_url("poster.image", poster.get("image"), warnings)
+            if poster.get("url"):
+                if not str(poster["url"]).startswith(("https://", "http://")):
+                    errors.append("poster.url 은 http(s):// 로 시작해야 합니다")
+            if poster.get("speaker_id") and poster["speaker_id"] not in {s.get("id") for s in data.get("speakers") or []}:
+                errors.append(f"poster.speaker_id {poster['speaker_id']!r} 에 해당하는 speakers[].id 가 없습니다")
+            if not (poster.get("url") or su):
+                warnings.append("poster: 홈페이지 주소(site_url 또는 poster.url)가 없어 포스터에 QR 코드가 들어가지 않습니다")
+
     for todo in data.get("_todo") or []:
         warnings.append(f"[확인 필요] {todo}")
 

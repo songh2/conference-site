@@ -7,6 +7,7 @@
     "src": "",
     "alt": { "ko": "", "en": "" }
   },
+  "site_url": "https://example.org/workshop-2027/",
   "title": {
     "ko": "예시 학술 워크숍 2027",
     "en": "Example Academic Workshop 2027"
@@ -99,6 +100,7 @@
       "id": "gildong-hong",
       "name": { "ko": "홍길동", "en": "Gildong Hong" },
       "affiliation": { "ko": "예시대학교", "en": "Example University" },
+      "group": { "ko": "기조강연", "en": "Plenary Lecture" },
       "title": {
         "ko": "$\\zeta(s)$ 의 영점 분포에 관한 몇 가지 관찰",
         "en": "Some observations on the zeros of $\\zeta(s)$"
@@ -117,6 +119,7 @@
       "id": "bogi-lee",
       "name": { "ko": "이보기", "en": "Bogi Lee" },
       "affiliation": { "ko": "견본연구소", "en": "Sample Institute" },
+      "group": { "ko": "초청강연", "en": "Invited Lecture" },
       "title": { "ko": "", "en": "" },
       "abstract": { "ko": "", "en": "" },
       "slides": "",
@@ -209,6 +212,15 @@
       "phone": ""
     }
   ],
+  "poster": {
+    "layout": "program",
+    "size": "A2",
+    "lang": "both",
+    "note": { "ko": "누구나 참석 가능 · 사전등록 권장", "en": "Open to all · Pre-registration recommended" },
+    "highlights": [],
+    "qr": true,
+    "show_contact": true
+  },
   "footer": {
     "ko": "예시 학술 워크숍 2027 조직위원회 · 예시대학교 예시학부",
     "en": "Example Academic Workshop 2027 Organizing Committee · Department of Examples, Example University"

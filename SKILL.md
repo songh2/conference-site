@@ -1,6 +1,6 @@
 ---
 name: conference-site
-description: 학회·워크샵·세미나·심포지엄 홈페이지(한/영 전환, 정적 HTML 1장) 제작과 수정. 행사명·기간·장소·조직위원·일정·등록 방법을 받아 conference.json 을 쓰고 build.py 로 생성하며, 발표자 초록·발표자료 반영, 구글 시트 등록 양식, 테마(단과대학 배색) 적용, GitHub Pages 공개 안내까지 다룬다. 학회/워크숍/세미나/행사 사이트·홈페이지 요청 시 사용.
+description: 학회·워크샵·세미나·심포지엄 홈페이지(한/영 전환, 정적 HTML 1장)와 인쇄용 포스터(A1~A4 PDF) 제작과 수정. 행사명·기간·장소·조직위원·일정·등록 방법을 받아 conference.json 을 쓰고 build.py 로 홈페이지를, make_poster.py 로 포스터를 만들며, 발표자 초록·발표자료 반영, 구글 시트 등록 양식, 테마(단과대학 배색), GitHub Pages 공개 안내, OpenDesign 연계까지 다룬다. 학회/워크숍/세미나/강연/행사 홈페이지·포스터 요청 시 사용.
 ---
 
 # 학회 홈페이지 제작 스킬 (conference-site)
@@ -70,6 +70,20 @@ python3 scripts/build.py sites/<slug> --deploy dist/<slug>
 2. **확인 필요 목록** — `_todo` 와 `validate.py` 경고를 사람이 읽기 쉽게 정리 (영문명 미확인, 등록폼 링크, 사진 등)
 3. 다음 단계 — 배포는 `docs/manual-github-pages.md`(공개 GitHub 저장소에 `dist/<slug>/` 내용을 올리고 Settings → Pages 활성화) 로 안내하고, 등록 양식을 쓰면 `docs/manual-google-sheet.md`, 마감일이 있으면 `references/checklist.md` 기준으로 남은 준비 업무를 한 줄씩. **파이썬을 실행할 수 없는 환경**이면 `conference.json` 만 완성해 주고 `blank/index.html` + `tools/encode-email.html` 경로(`docs/manual-chatgpt.md` 4절)를 안내한다.
 
+### 6-1. 포스터 만들기
+"포스터 만들어 줘" 요청은 같은 `conference.json` 으로 처리한다(`docs/poster.md`).
+```bash
+python3 scripts/make_poster.py sites/<slug>                 # poster 설정대로 (없으면 자동 배치, A2, 한/영)
+python3 scripts/make_poster.py sites/<slug> --all           # program·speakers·lecture·photo 네 배치 비교
+python3 scripts/make_poster.py sites/<slug> --layout lecture --size A3 --lang ko
+```
+- 결과 `dist/<slug>/poster/*.pdf`(인쇄용), `*.png`(미리보기), `*.html`. PDF 는 Playwright, QR 코드는 segno 가 있어야 만들어진다(없으면 HTML 과 경고만). 없는 패키지는 설치를 시도하고(`pip install segno playwright`), 안 되면 그 사실을 알린다.
+- 포스터의 모든 글은 `conference.json` 에서 온다. 포스터용 구호·소개 문구를 지어내지 않는다. 필요하면 사용자가 준 문장을 `poster.note`·`poster.headline` 에 넣는다.
+- QR 코드를 넣으려면 `site_url`(공개된 홈페이지 주소)이 필요하다. 아직 없으면 사용자에게 묻거나 비워 두고 경고를 전한다.
+- 강연형 사진(`speakers[].photo`)·후원 로고(`sponsors[].logo`)는 사용자가 준 파일만, 본인 동의·사용 권한이 확인된 것만 쓴다. 실존 인물 사진을 생성하거나 다른 포스터에서 잘라 쓰지 않는다.
+- `WARN 내용이 용지에 다 들어가지 않습니다` 가 나오면 용지를 키우거나 배치를 바꿔 다시 만들고, 결과 PNG 를 직접 보고 확인한 뒤 전달한다.
+- 사용자가 "더 화려하게", "일러스트 넣어서" 처럼 기본 틀을 넘는 디자인을 원하면 `python3 scripts/export_open_design.py --brief sites/<slug>` 로 브리프와 디자인 시스템을 만들어 OpenDesign 등 AI 디자인 도구로 가져가는 방법(`docs/open-design.md`)을 안내한다.
+
 ### 7. 기존 사이트 수정
 "일정 바꿔 줘", "연사 추가해 줘", "행사 끝났으니 발표자료 올려 줘" 같은 요청은 **`conference.json` 만 고치고 다시 빌드**한다.
 `index.html` 을 직접 편집하지 않는다(다음 빌드 때 사라진다). 행사 후에는 `speakers[].slides`, `downloads`(포스터·프로그램북), `gallery`(단체사진)에 자료를 추가하면 경력 증빙·여비 정산 자료로 쓰기 좋다.
@@ -103,6 +117,8 @@ python3 scripts/import_participants.py sites/<slug> responses.csv            # �
 - `docs/manual-google-sheet.md` — 등록 양식용 구글 계정 선택과 인수인계
 - `docs/manual-chatgpt.md`, `docs/manual-claude.md` — 각 AI 도구에서 이 스킬을 쓰는 방법
 - `docs/themes.md` — 테마 프리셋과 로고
+- `docs/poster.md` — 인쇄용 포스터 만들기 (배치 4종, 크기, 인쇄 점검표)
+- `docs/open-design.md` — OpenDesign 에 행사 정보·배색을 가져가 포스터 시안을 다듬는 방법
 - `docs/security.md` — 공개 저장소 운영 시 보안·개인정보 점검표
 - `references/hosting.md` — GitHub Pages / Cloudflare Pages / Google Sites 비교
 - `references/registration-sheet.md` — 홈페이지 안 등록 양식(구글 시트 + Apps Script) 설정·운영·문제 해결

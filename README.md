@@ -18,6 +18,8 @@
 | 이메일 보호 | 위원·발표자 이메일은 그림 속 확인 코드를 입력해야 보임 (수집 방지) |
 | 테마 | `"theme": "snu-science"` 처럼 한 줄로 배색 변경. **서울대학교 공통 + 16개 단과대학·학부 프리셋** 과 범용 5종. 공개 후 주소에 `?theme=<id>` 를 붙여 미리보기 |
 | 인쇄 | 메뉴·버튼 제외, 일정·초록·위원·명단이 문서로 출력 |
+| **포스터** | 같은 `conference.json` 으로 **A1~A4 인쇄용 포스터(PDF·PNG)**. 일정표형·연사형·강연형·사진형, 테마 배색, QR 코드, 글자 크기 자동 맞춤 → `docs/poster.md` |
+| OpenDesign 연계 | 행사 정보 브리프와 테마를 [OpenDesign](https://github.com/nexu-io/open-design) 디자인 시스템 형식으로 내보내 AI 로 포스터 시안 다듬기 → `docs/open-design.md` |
 | 유지 | 행사 후 발표자료·사진·포스터 추가 → 증빙 자료 주소로 보존. 종료 표시 자동 |
 
 예시 사이트: `sites/example-2027/` (모든 인물·기관은 가상). 빌드하면 `sites/example-2027/index.html` 을 더블클릭해 볼 수 있습니다.
@@ -57,6 +59,8 @@ python3 scripts/build.py sites/my-workshop-2027 --deploy dist/my-workshop-2027  
 | `docs/manual-chatgpt.md` | ChatGPT(Edu) Skills·프로젝트·Codex 에서 쓰기, 파이썬 없이 쓰기 |
 | `docs/manual-claude.md` | claude.ai·Claude Code 에서 쓰기 |
 | `docs/themes.md` | 테마 고르기, 서울대 단과대학 프리셋 목록·근거, 서울대 UI 규정, 프리셋 추가·로고 |
+| `docs/poster.md` | 인쇄용 포스터 만들기 — 배치 4종, 크기, 설정 항목, 인쇄 점검표 |
+| `docs/open-design.md` | OpenDesign 과 함께 쓰기 — 디자인 시스템·브리프 내보내기, 가져오기, 주의할 점 |
 | `docs/security.md` | 무엇이 공개되는지, 공개 전 점검표, 사고 대응 |
 | `docs/faq.md` | 자주 묻는 질문 (발표자 자료 접수, 주소, 명단 등) |
 | `references/schema.md` | `conference.json` 모든 항목 |
@@ -73,9 +77,11 @@ conference-site/            ← 이 폴더 자체가 스킬 (SKILL.md 가 있는
 ├── SKILL.md                AI 가 읽는 작업 지시서 (Claude·ChatGPT·Codex 공통)
 ├── AGENTS.md               Codex 등 코딩 에이전트용 안내
 ├── template/               홈페이지 틀 (index.template.html, style.css, app.js, registration.gs, conference.skeleton.json)
+│                           + 포스터 틀 (poster.css, poster.js)
 ├── themes/                 배색 프리셋 (snu + 서울대 단과대학 16종, 범용 5종, _template)
 ├── scripts/                파이썬 스크립트 (new_site, validate, build, import_speakers, import_participants,
-│                           make_registration_script, encode_email, theme_gallery, package_skill, selftest)
+│                           make_registration_script, encode_email, theme_gallery, make_poster, export_open_design,
+│                           package_skill, selftest)
 ├── references/             AI 와 사람이 같이 보는 참고 문서
 ├── docs/                   사람용 매뉴얼
 ├── chatgpt/                ChatGPT 프로젝트 지시문
@@ -100,7 +106,8 @@ python3 scripts/selftest.py
 
 ## 개선 아이디어
 - 단과대학 프리셋을 공식 색상 값으로 교체 (현재 대부분 홈페이지 화면에서 읽은 값 — 공식 수치를 아시면 기여 환영)
-- 참가자 수 자동 집계 표시, 포스터·명찰 PDF 생성, 다중 페이지(초록집) 템플릿
+- 포스터: 도련(재단 여유) 옵션, SNS 정사각·세로 이미지, 현수막 비율
+- 참가자 수 자동 집계 표시, 명찰 PDF 생성, 다중 페이지(초록집) 템플릿
 - 영문 성명 조회 보조 (확인은 사람이)
 
 ## 라이선스와 면책

@@ -35,7 +35,10 @@
 | `footer` | ko/en | | 푸터 왼쪽 문구 (없으면 title) |
 | `footer_url` | 문자열 | | 푸터에 표시할 링크 (학과 홈페이지 등) |
 | `updated` | `YYYY-MM-DD` | | 푸터 "최종 수정" |
-| `theme` | 객체 | | CSS 변수 덮어쓰기. 예 `{"--primary":"#0b3d91","--accent":"#c8a24a"}` |
+| `theme` | 문자열 또는 객체 | | 배색. 프리셋 id(`"snu-science"` 등, 목록은 `themes/`·`docs/themes.md`), CSS 변수 객체(`{"--primary":"#0b3d91"}`), 또는 둘의 조합(`{"preset":"slate","--accent":"#..."}`). 배포 후 GitHub 웹에서 값만 바꿔도 즉시 반영되고, 주소에 `?theme=<id>` 를 붙이면 저장 없이 미리보기. 변수 이름은 `--소문자-하이픈`, 값은 색·글꼴·px 만 허용 |
+| `logo` | 객체 | | 상단바 기관 로고 `{ "src": "assets/logo.svg", "alt": ko/en, "hide_text": false }`. **사용 권한이 있는 파일만.** 이 템플릿에는 어떤 로고도 포함되지 않음 |
+| `site_url` | 문자열 | | 공개된 홈페이지 주소(`https://…`). 포스터의 QR 코드와 주소 표시에 쓰임 |
+| `poster` | 객체 | | 인쇄용 포스터 설정(배치·크기·언어·안내 문구 등). → `docs/poster.md` 4절 |
 | `email_protection` | `"captcha"`(기본) / `"none"` | | 이메일 보호 방식. `none` 이면 평문 mailto 링크로 표시(권장하지 않음) |
 | `_todo` | 문자열 배열 | | 확인 필요 메모. 화면에는 안 나오고 validate.py 가 경고로 출력 |
 
@@ -82,6 +85,8 @@
 | `title`, `abstract` | ko/en. 수식은 `$...$`(인라인), `$$...$$`(별도 줄). 제목이 비면 "강연 제목 추후 공지" |
 | `slides` | 문자열 하나 또는 `[{ "label": ko/en, "url": ... }, ...]` (여러 파일) |
 | `url`, `email` | 홈페이지 링크(이름 옆 집 아이콘), 이메일(봉투 아이콘) |
+| `photo` | (포스터 강연형) 연사 사진 `assets/speakers/<id>.jpg`, 세로 4:5 권장. 본인 동의를 받은 사진만 |
+| `group` | (포스터 연사형) 구분 이름 ko/en, 예 `{"ko": "기조강연", "en": "Plenary Lecture"}` |
 
 구글폼으로 받은 응답을 넣을 때는 `scripts/import_speakers.py` 를 쓴다 → `references/speaker-submission.md`.
 
@@ -160,9 +165,9 @@
 
 고등과학원(KIAS) 구성원 페이지처럼, 이메일 주소는 **확인 코드를 입력한 사람에게만** 보여 준다.
 
-- 원본 `sites/<slug>/conference.json` 에는 위원·발표자·문의처의 `email` 을 **평문**으로 적는다(이 저장소는 비공개).
+- 원본 `sites/<slug>/conference.json` 에는 위원·발표자·문의처의 `email` 을 **평문**으로 적는다. 그래서 원본은 **비공개 저장소나 로컬 폴더**에 둔다(공개된 스킬 저장소 안에 두지 않는다).
 - `build.py` 가 공개본(index.html, 배포용 conference.json)을 만들 때 `email` 을 지우고 난독화한 `email_enc`("v1:…")만 남긴다. 그래서 공개 페이지 소스에는 `xxx@yyy` 모양이 전혀 없다. 빌드 로그에 "보호된 이메일 n건"이 나오고, 안내문 등에 주소가 글자로 남아 있으면 WARN 으로 알려 준다.
 - 화면에서 봉투 아이콘(또는 문의처의 "이메일 확인" 버튼)을 누르면 대화창이 열린다: 그림 속 5자리 코드 입력 → [새 코드] [음성 듣기] → 맞으면 주소·[메일 보내기]·[주소 복사] 표시. 틀리면 새 코드가 나온다. 코드는 방문자 브라우저 안에서만 만들어지고 페이지 글자로는 존재하지 않는다.
 - 한계: 주소를 되돌리는 규칙이 app.js 안에 있으므로 **암호화가 아니다**. 페이지 글자를 긁어 가는 일반 수집기는 막지만, 스크립트를 분석하는 공격은 막지 못한다. 이는 정적 호스팅(서버 없음)에서 가능한 최선이며, KIAS 처럼 서버가 코드를 검증하는 방식보다 약하다.
-- 배포 저장소의 `conference.json` 을 GitHub 웹에서 직접 고칠 때 주소를 넣으려면 `python3 scripts/encode_email.py --slug <slug> 주소` 로 만든 값을 `email_enc` 에 넣는다(평문 `email` 을 넣으면 보호되지 않는다).
+- 배포 저장소의 `conference.json` 을 GitHub 웹에서 직접 고칠 때 주소를 넣으려면 `python3 scripts/encode_email.py --slug <slug> 주소` 또는 브라우저용 `tools/encode-email.html`(파이썬 불필요) 로 만든 값을 `email_enc` 에 넣는다(평문 `email` 을 넣으면 보호되지 않는다).
 - `_todo` 처럼 `_` 로 시작하는 키는 공개본에서 자동으로 제거된다.
