@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 from build import build, build_blank, EMAIL_RE  # noqa: E402
 from emailcodec import encode_email, decode_email  # noqa: E402
-from themes import load_presets, resolve_theme  # noqa: E402
+from themes import load_presets, resolve_theme, contrast_issues, STATUSES  # noqa: E402
 from validate import validate  # noqa: E402
 
 fails = 0
@@ -67,6 +67,10 @@ def main():
             out = (w / "index.html").read_text(encoding="utf-8")
             v = presets[pid]["vars"]
             ok(all(f"{k}:{val}" in out for k, val in v.items()), f"테마 '{pid}' 빌드 — CSS 변수 {len(v)}개 포함")
+        for pid, p in presets.items():
+            iss = contrast_issues(p["vars"])
+            ok(not iss, f"테마 '{pid}' 글자 대비 기준 충족 (WCAG 4.5:1, 초점 3:1)" + (f" — {iss}" if iss else ""))
+            ok(p["status"] in STATUSES and (p["status"] == "generic" or p.get("source")), f"테마 '{pid}' 상태({p['status']})·출처 기록")
         bad_vars, e1, _ = resolve_theme({"--primary": "red;}</style><script>"})
         _, e2, _ = resolve_theme("no-such-preset")
         _, e3, _ = resolve_theme({"--x": "url(http://evil)"})

@@ -16,7 +16,7 @@
 | 발표자·초록 | 이름 → 초록 카드 연결, 수식(`$...$`) 렌더링, 발표자료 PDF 링크 |
 | 홈페이지 안 등록 양식 | 이름·소속·이메일·참석 구분 → 구글 시트. 참가자 명단(이름·소속, 동의자만) 자동 표시 |
 | 이메일 보호 | 위원·발표자 이메일은 그림 속 확인 코드를 입력해야 보임 (수집 방지) |
-| 테마 | `"theme": "snu-engineering"` 처럼 한 줄로 배색 변경. 단과대학별 프리셋 추가 가능 |
+| 테마 | `"theme": "snu-science"` 처럼 한 줄로 배색 변경. **서울대학교 공통 + 16개 단과대학·학부 프리셋** 과 범용 5종. 공개 후 주소에 `?theme=<id>` 를 붙여 미리보기 |
 | 인쇄 | 메뉴·버튼 제외, 일정·초록·위원·명단이 문서로 출력 |
 | 유지 | 행사 후 발표자료·사진·포스터 추가 → 증빙 자료 주소로 보존. 종료 표시 자동 |
 
@@ -56,7 +56,7 @@ python3 scripts/build.py sites/my-workshop-2027 --deploy dist/my-workshop-2027  
 | `docs/manual-google-sheet.md` | 등록 양식용 **구글 계정 선택(개인/학교/부서 공용)**, 시트·Apps Script 만들기, 계정 옮기기, 개인정보 운영 |
 | `docs/manual-chatgpt.md` | ChatGPT(Edu) Skills·프로젝트·Codex 에서 쓰기, 파이썬 없이 쓰기 |
 | `docs/manual-claude.md` | claude.ai·Claude Code 에서 쓰기 |
-| `docs/themes.md` | 테마 고르기·단과대학 프리셋 추가·로고 |
+| `docs/themes.md` | 테마 고르기, 서울대 단과대학 프리셋 목록·근거, 서울대 UI 규정, 프리셋 추가·로고 |
 | `docs/security.md` | 무엇이 공개되는지, 공개 전 점검표, 사고 대응 |
 | `docs/faq.md` | 자주 묻는 질문 (발표자 자료 접수, 주소, 명단 등) |
 | `references/schema.md` | `conference.json` 모든 항목 |
@@ -73,7 +73,7 @@ conference-site/            ← 이 폴더 자체가 스킬 (SKILL.md 가 있는
 ├── SKILL.md                AI 가 읽는 작업 지시서 (Claude·ChatGPT·Codex 공통)
 ├── AGENTS.md               Codex 등 코딩 에이전트용 안내
 ├── template/               홈페이지 틀 (index.template.html, style.css, app.js, registration.gs, conference.skeleton.json)
-├── themes/                 배색 프리셋 (default, snu-engineering, slate, forest, burgundy, charcoal, _template)
+├── themes/                 배색 프리셋 (snu + 서울대 단과대학 16종, 범용 5종, _template)
 ├── scripts/                파이썬 스크립트 (new_site, validate, build, import_speakers, import_participants,
 │                           make_registration_script, encode_email, theme_gallery, package_skill, selftest)
 ├── references/             AI 와 사람이 같이 보는 참고 문서
@@ -99,7 +99,7 @@ python3 scripts/selftest.py
 예시 사이트 빌드, 모든 테마 빌드, 빈 템플릿 생성, 공개본 평문 이메일 검사, 테마 값 검증을 확인합니다. 브라우저 동작 시험(언어 전환, 등록 양식, 이메일 창, 인쇄)은 개발 중 Chromium 으로 확인했으며 저장소에는 포함하지 않았습니다.
 
 ## 개선 아이디어
-- 서울대학교 공통·단과대학별 테마 프리셋 (공식 색상 값 확인 필요 — 기여 환영)
+- 단과대학 프리셋을 공식 색상 값으로 교체 (현재 대부분 홈페이지 화면에서 읽은 값 — 공식 수치를 아시면 기여 환영)
 - 참가자 수 자동 집계 표시, 포스터·명찰 PDF 생성, 다중 페이지(초록집) 템플릿
 - 영문 성명 조회 보조 (확인은 사람이)
 

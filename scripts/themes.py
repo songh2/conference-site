@@ -18,6 +18,9 @@ THEME_DIR = ROOT / "themes"
 VAR_NAME = re.compile(r"^--[a-z0-9-]{1,40}$")
 VAR_VALUE = re.compile(r"^[#A-Za-z0-9 ,.()%'\"\-]{1,200}$")
 PRESET_ID = re.compile(r"^[a-z0-9-]{1,40}$")
+# official: 공식 UI 가이드 수치 / extracted: 기관 홈페이지 화면에서 읽은 값(공식 아님) / generic: 범용 / draft: 초안
+STATUSES = ("official", "extracted", "generic", "draft")
+STATUS_KO = {"official": "공식 색 기반", "extracted": "홈페이지 추출(공식 아님)", "generic": "범용", "draft": "초안"}
 
 
 def load_presets():
@@ -39,7 +42,8 @@ def load_presets():
         out[pid] = {
             "id": pid,
             "name": d.get("name") or {"ko": pid, "en": pid},
-            "status": d.get("status") or "draft",
+            "group": d.get("group") or "generic",
+            "status": d.get("status") if d.get("status") in STATUSES else "draft",
             "source": d.get("source") or "",
             "note": d.get("note") or {},
             "vars": clean_vars,
@@ -104,3 +108,73 @@ def presets_for_js(presets=None):
     """app.js 에 끼워 넣을 {id: vars} 맵 (런타임에 conference.json 의 theme 을 적용할 때 사용)."""
     presets = load_presets() if presets is None else presets
     return {pid: p["vars"] for pid, p in presets.items()}
+
+
+# ---------------------------------------------------------------------------
+# 글자 대비 검사 (WCAG 2.x 상대 휘도 공식). 테마를 추가할 때 읽기 어려운 조합을 잡아낸다.
+DEFAULTS = {
+    "--ink": "#1b2230", "--bg": "#faf9f6", "--surface": "#ffffff",
+    "--primary": "#173a5e", "--primary-deep": "#0f2a46", "--hero-end": "#2b5a86",
+    "--accent": "#b9893b", "--accent-ink": "#1b1300",
+}
+HEX = re.compile(r"^#([0-9a-fA-F]{6})$")
+
+
+def _rgb(h):
+    m = HEX.match(h or "")
+    if not m:
+        return None
+    v = m.group(1)
+    return tuple(int(v[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def _lum(rgb):
+    def ch(c):
+        c = c / 255
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+    r, g, b = (ch(x) for x in rgb)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def contrast(a, b):
+    ra, rb = _rgb(a), _rgb(b)
+    if not ra or not rb:
+        return None
+    la, lb = _lum(ra), _lum(rb)
+    hi, lo = max(la, lb), min(la, lb)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def _over(fg_rgb, alpha, bg_rgb):
+    return tuple(round(alpha * f + (1 - alpha) * b) for f, b in zip(fg_rgb, bg_rgb))
+
+
+def contrast_issues(vars_dict):
+    """읽기 어려운 조합 목록 [(설명, 대비값, 기준)]. 색이 #rrggbb 가 아니면 그 항목은 건너뛴다."""
+    v = dict(DEFAULTS)
+    v.update({k: val for k, val in (vars_dict or {}).items() if isinstance(val, str)})
+    if "--focus" not in (vars_dict or {}):
+        v["--focus"] = v["--primary"]   # style.css 기본값과 같게
+    checks = [
+        ("표 머리글·언어 버튼: 흰 글자 / --primary", "#ffffff", v["--primary"], 4.5),
+        ("링크 글자: --primary / 페이지 배경", v["--primary"], v["--bg"], 4.5),
+        ("소제목 글자: --primary-deep / 페이지 배경", v["--primary-deep"], v["--bg"], 4.5),
+        ("바닥글: 흰 글자 / --primary-deep", "#ffffff", v["--primary-deep"], 4.5),
+        ("사전등록 버튼: --accent-ink / --accent", v["--accent-ink"], v["--accent"], 4.5),
+        ("키보드 초점 테두리: --focus / 페이지 배경", v["--focus"], v["--bg"], 3.0),
+    ]
+    out = []
+    for label, fg, bg, need in checks:
+        c = contrast(fg, bg)
+        if c is not None and c < need:
+            out.append((label, round(c, 2), need))
+    # 히어로: 흰 글자가 그라데이션 위에서 읽히는지 (어두운 덧칠 45% 를 감안)
+    shade = (10, 22, 40)
+    for key in ("--primary-deep", "--primary", "--hero-end"):
+        rgb = _rgb(v[key])
+        if rgb:
+            mixed = "#%02x%02x%02x" % _over(shade, 0.45, rgb)
+            c = contrast("#ffffff", mixed)
+            if c is not None and c < 4.5:
+                out.append((f"대표 영역 흰 글자 / {key}(덧칠 포함)", round(c, 2), 4.5))
+    return out

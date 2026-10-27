@@ -1,0 +1,23 @@
+{
+  "id": "snu-humanities",
+  "name": {
+    "ko": "서울대학교 인문대학",
+    "en": "SNU College of Humanities"
+  },
+  "status": "extracted",
+  "group": "snu",
+  "source": "https://humanities.snu.ac.kr/ (2026-10-27 확인, 브라우저 계산된 스타일). 관찰값: 주색 #193988, 청록 #17a2b8, 짙은 회색 #2d3436 (홈페이지 계산된 스타일). 파생값: --accent-hover(강조색을 흰색과 18% 섞음), --accent-soft(강조색을 흰색과 86% 섞음)",
+  "note": {
+    "ko": "인문대학 홈페이지(https://humanities.snu.ac.kr/) 화면에서 2026-10-27 에 읽은 색을 바탕으로 만든 배색입니다. 공식 UI 규정 색이 아닙니다. 로고는 포함하지 않습니다. 기관 시그니처(로고)는 서울대 UI 가이드에 따라 SNU Blue·SNU Gray·검정·흰색만 사용합니다.",
+    "en": "Palette derived from colours read on the college website on 2026-10-27; not an official UI specification. No logo is bundled."
+  },
+  "vars": {
+    "--primary": "#193988",
+    "--primary-deep": "#2d3436",
+    "--hero-end": "#17a2b8",
+    "--accent": "#17a2b8",
+    "--accent-ink": "#04252a",
+    "--accent-hover": "#41b3c5",
+    "--accent-soft": "#dff2f5"
+  }
+}

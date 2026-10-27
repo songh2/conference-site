@@ -13,7 +13,11 @@
   var THEME_VAR_NAME = /^--[a-z0-9-]{1,40}$/;
   var THEME_VAR_VALUE = /^[#A-Za-z0-9 ,.()%'"\-]{1,200}$/;
 
+  var appliedThemeVars = [];
   function applyTheme(theme) {
+    var root = document.documentElement.style;
+    appliedThemeVars.forEach(function (k) { root.removeProperty(k); });
+    appliedThemeVars = [];
     var vars = {};
     var presetId = null, overrides = {};
     if (typeof theme === 'string') presetId = theme;
@@ -25,9 +29,17 @@
       if (!THEME_VAR_NAME.test(k) || !THEME_VAR_VALUE.test(v) || /url\(/i.test(v)) return;
       vars[k] = v;
     });
-    var root = document.documentElement.style;
-    Object.keys(vars).forEach(function (k) { root.setProperty(k, vars[k]); });
+    Object.keys(vars).forEach(function (k) { root.setProperty(k, vars[k]); appliedThemeVars.push(k); });
   }
+  // 미리보기: 주소 끝에 ?theme=snu-science 처럼 붙이면 그 프리셋으로 보인다(저장되지 않음).
+  // 테마 갤러리는 window.confSiteSetTheme('snu-science') 로 바꾼다. 알려진 프리셋 id 만 받는다.
+  function previewTheme() {
+    try { var q = new URLSearchParams(location.search).get('theme'); return (q && (q === 'default' || THEMES[q])) ? q : null; } catch (e) { return null; }
+  }
+  window.confSiteSetTheme = function (id) {
+    if (id === 'default' || THEMES[id]) { applyTheme(id === 'default' ? {} : id); return true; }
+    return false;
+  };
 
   var UI = {
     ko: {
@@ -1281,7 +1293,8 @@
     if (!data) { document.getElementById('app').textContent = 'conference.json could not be loaded.'; return; }
     state.data = data;
     state.lang = initialLang(data);
-    applyTheme(data.theme);
+    var pv = previewTheme();
+    applyTheme(pv ? (pv === 'default' ? {} : pv) : data.theme);
     wireControls();
     render();
     loadLiveParticipants();

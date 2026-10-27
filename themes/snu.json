@@ -1,0 +1,23 @@
+{
+  "id": "snu",
+  "name": {
+    "ko": "서울대학교 (공통)",
+    "en": "Seoul National University"
+  },
+  "status": "official",
+  "group": "snu",
+  "source": "https://www.snu.ac.kr/ (2026-10-27 확인, 브라우저 계산된 스타일). 관찰값: SNU Blue #0f0f70(Pantone 2748C, RGB 15/15/112)·SNU Beige #dcdab2(RGB 220/218/178)는 서울대학교 UI 가이드(identity.snu.ac.kr/color/1)의 공식 값. #1b3b86·#3b5ca9 는 www.snu.ac.kr 홈페이지에서 읽은 값. 파생값: --accent-hover(강조색을 흰색과 18% 섞음), --accent-soft(강조색을 흰색과 86% 섞음)",
+  "note": {
+    "ko": "서울대학교 (공통)의 공식 UI 색을 바탕으로 한 배색입니다. 로고는 포함하지 않습니다. 기관 시그니처(로고)는 서울대 UI 가이드에 따라 SNU Blue·SNU Gray·검정·흰색만 사용합니다.",
+    "en": "Palette based on official UI colours. No logo is bundled."
+  },
+  "vars": {
+    "--primary": "#1b3b86",
+    "--primary-deep": "#0f0f70",
+    "--hero-end": "#3b5ca9",
+    "--accent": "#dcdab2",
+    "--accent-ink": "#0f0f70",
+    "--accent-hover": "#e2e1c0",
+    "--accent-soft": "#fafaf4"
+  }
+}

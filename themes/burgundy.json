@@ -1,11 +1,23 @@
 {
   "id": "burgundy",
-  "name": { "ko": "버건디 (자주·베이지)", "en": "Burgundy" },
-  "status": "verified",
+  "name": {
+    "ko": "버건디 (자주·베이지)",
+    "en": "Burgundy"
+  },
+  "status": "generic",
   "source": "이 템플릿의 범용 배색. 특정 기관의 공식 색이 아님.",
-  "note": { "ko": "인문·사회·예술 계열 행사에 어울리는 차분한 자주색.", "en": "A calm burgundy for humanities, social science or arts events." },
+  "note": {
+    "ko": "인문·사회·예술 계열 행사에 어울리는 차분한 자주색.",
+    "en": "A calm burgundy for humanities, social science or arts events."
+  },
   "vars": {
-    "--primary": "#6b1f2e", "--primary-deep": "#4a1520", "--hero-end": "#8a3a4a",
-    "--accent": "#e8c9a0", "--accent-hover": "#f0d9b8", "--accent-soft": "#f7ebdc", "--accent-ink": "#2a1a08"
-  }
+    "--primary": "#6b1f2e",
+    "--primary-deep": "#4a1520",
+    "--hero-end": "#8a3a4a",
+    "--accent": "#e8c9a0",
+    "--accent-hover": "#f0d9b8",
+    "--accent-soft": "#f7ebdc",
+    "--accent-ink": "#2a1a08"
+  },
+  "group": "generic"
 }

@@ -1,0 +1,27 @@
+{
+  "id": "snu-medicine",
+  "name": {
+    "ko": "서울대학교 의과대학",
+    "en": "SNU College of Medicine"
+  },
+  "status": "extracted",
+  "group": "snu",
+  "source": "https://medicine.snu.ac.kr/ (2026-10-27 확인, 브라우저 계산된 스타일). 관찰값: 무채색 위주: 바닥글 #303134, 바탕 #f2f2f2, 회청 강조 #4e5d7d·#5a74aa. 파생값: --accent-hover(강조색을 흰색과 18% 섞음), --accent-soft(강조색을 흰색과 86% 섞음)",
+  "note": {
+    "ko": "의과대학 홈페이지(https://medicine.snu.ac.kr/) 화면에서 2026-10-27 에 읽은 색을 바탕으로 만든 배색입니다. 공식 UI 규정 색이 아닙니다. 로고는 포함하지 않습니다. 기관 시그니처(로고)는 서울대 UI 가이드에 따라 SNU Blue·SNU Gray·검정·흰색만 사용합니다.",
+    "en": "Palette derived from colours read on the college website on 2026-10-27; not an official UI specification. No logo is bundled."
+  },
+  "vars": {
+    "--primary": "#4e5d7d",
+    "--primary-deep": "#303134",
+    "--hero-end": "#5a74aa",
+    "--accent": "#ffffff",
+    "--accent-ink": "#303134",
+    "--accent-line": "#4e5d7d",
+    "--bg": "#ffffff",
+    "--soft": "#f2f2f2",
+    "--font-head": "\"Noto Sans KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", system-ui, sans-serif",
+    "--accent-hover": "#e8e8e8",
+    "--accent-soft": "#e6e8ed"
+  }
+}

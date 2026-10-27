@@ -1,0 +1,23 @@
+{
+  "id": "snu-business",
+  "name": {
+    "ko": "서울대학교 경영대학",
+    "en": "SNU College of Business Administration"
+  },
+  "status": "extracted",
+  "group": "snu",
+  "source": "https://cba.snu.ac.kr/ (2026-10-27 확인, 브라우저 계산된 스타일). 관찰값: 주색 #19398a, 짙은 남색 #132d6e, 청색 #2980b9, 금색 #d3b269. 파생값: --accent-hover(강조색을 흰색과 18% 섞음), --accent-soft(강조색을 흰색과 86% 섞음)",
+  "note": {
+    "ko": "경영대학 홈페이지(https://cba.snu.ac.kr/) 화면에서 2026-10-27 에 읽은 색을 바탕으로 만든 배색입니다. 공식 UI 규정 색이 아닙니다. 로고는 포함하지 않습니다. 기관 시그니처(로고)는 서울대 UI 가이드에 따라 SNU Blue·SNU Gray·검정·흰색만 사용합니다.",
+    "en": "Palette derived from colours read on the college website on 2026-10-27; not an official UI specification. No logo is bundled."
+  },
+  "vars": {
+    "--primary": "#19398a",
+    "--primary-deep": "#132d6e",
+    "--hero-end": "#2980b9",
+    "--accent": "#d3b269",
+    "--accent-ink": "#221a05",
+    "--accent-hover": "#dbc084",
+    "--accent-soft": "#f9f4ea"
+  }
+}

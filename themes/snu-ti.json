@@ -1,0 +1,24 @@
+{
+  "id": "snu-ti",
+  "name": {
+    "ko": "서울대학교 첨단융합학부",
+    "en": "SNU Department of Intelligence and Information / SNU TI"
+  },
+  "status": "extracted",
+  "group": "snu",
+  "source": "https://snuti.snu.ac.kr/ (2026-10-27 확인, 브라우저 계산된 스타일). 관찰값: 짙은 청록 #00282a, 청록 강조 #00b3ba, 바탕 #f6f6f6. 파생값: --accent-hover(강조색을 흰색과 18% 섞음), --accent-soft(강조색을 흰색과 86% 섞음)",
+  "note": {
+    "ko": "첨단융합학부 홈페이지(https://snuti.snu.ac.kr/) 화면에서 2026-10-27 에 읽은 색을 바탕으로 만든 배색입니다. 공식 UI 규정 색이 아닙니다. 로고는 포함하지 않습니다. 기관 시그니처(로고)는 서울대 UI 가이드에 따라 SNU Blue·SNU Gray·검정·흰색만 사용합니다.",
+    "en": "Palette derived from colours read on the college website on 2026-10-27; not an official UI specification. No logo is bundled."
+  },
+  "vars": {
+    "--primary": "#00282a",
+    "--primary-deep": "#00282a",
+    "--hero-end": "#00b3ba",
+    "--accent": "#00b3ba",
+    "--accent-ink": "#00282a",
+    "--font-head": "\"Noto Sans KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", system-ui, sans-serif",
+    "--accent-hover": "#2ec1c6",
+    "--accent-soft": "#dbf4f5"
+  }
+}

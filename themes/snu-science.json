@@ -1,0 +1,23 @@
+{
+  "id": "snu-science",
+  "name": {
+    "ko": "서울대학교 자연과학대학",
+    "en": "SNU College of Natural Sciences"
+  },
+  "status": "extracted",
+  "group": "snu",
+  "source": "https://science.snu.ac.kr/ (2026-10-27 확인, 브라우저 계산된 스타일). 관찰값: 남색 #1c3f95, 금색 #c29c67, 청록 #1693a5, 연회색 바탕 #f1f2f6. 파생값: --primary-deep=#152f70(#1c3f95 을 25% 어둡게), --accent-hover(강조색을 흰색과 18% 섞음), --accent-soft(강조색을 흰색과 86% 섞음)",
+  "note": {
+    "ko": "자연과학대학 홈페이지(https://science.snu.ac.kr/) 화면에서 2026-10-27 에 읽은 색을 바탕으로 만든 배색입니다. 공식 UI 규정 색이 아닙니다. 로고는 포함하지 않습니다. 기관 시그니처(로고)는 서울대 UI 가이드에 따라 SNU Blue·SNU Gray·검정·흰색만 사용합니다.",
+    "en": "Palette derived from colours read on the college website on 2026-10-27; not an official UI specification. No logo is bundled."
+  },
+  "vars": {
+    "--primary": "#1c3f95",
+    "--primary-deep": "#152f70",
+    "--hero-end": "#1693a5",
+    "--accent": "#c29c67",
+    "--accent-ink": "#221707",
+    "--accent-hover": "#cdae82",
+    "--accent-soft": "#f6f1ea"
+  }
+}

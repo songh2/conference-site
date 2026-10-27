@@ -1,13 +1,29 @@
 {
   "id": "charcoal",
-  "name": { "ko": "차콜 (검정·흰색)", "en": "Charcoal (black & white)" },
-  "status": "verified",
+  "name": {
+    "ko": "차콜 (검정·흰색)",
+    "en": "Charcoal (black & white)"
+  },
+  "status": "generic",
   "source": "이 템플릿의 범용 배색. 특정 기관의 공식 색이 아님.",
-  "note": { "ko": "무채색 위주. 미술·디자인·건축 계열 행사나 사진이 중심인 행사에 어울립니다.", "en": "Monochrome palette for art, design or architecture events, or photo-led sites." },
+  "note": {
+    "ko": "무채색 위주. 미술·디자인·건축 계열 행사나 사진이 중심인 행사에 어울립니다.",
+    "en": "Monochrome palette for art, design or architecture events, or photo-led sites."
+  },
   "vars": {
-    "--primary": "#222225", "--primary-deep": "#111113", "--hero-end": "#4a4a4f",
-    "--accent": "#ffffff", "--accent-hover": "#e6e6e6", "--accent-soft": "#ececec", "--accent-ink": "#111113",
+    "--primary": "#222225",
+    "--primary-deep": "#111113",
+    "--hero-end": "#4a4a4f",
+    "--accent": "#ffffff",
+    "--accent-hover": "#e6e6e6",
+    "--accent-soft": "#ececec",
+    "--accent-ink": "#111113",
     "--font-head": "\"Noto Sans KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", system-ui, sans-serif",
-    "--radius": "4px", "--radius-sm": "3px", "--line": "#d9d9d9", "--bg": "#ffffff", "--soft": "#f3f3f3"
-  }
+    "--radius": "4px",
+    "--radius-sm": "3px",
+    "--line": "#d9d9d9",
+    "--bg": "#ffffff",
+    "--soft": "#f3f3f3"
+  },
+  "group": "generic"
 }

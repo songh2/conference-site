@@ -1,0 +1,25 @@
+{
+  "id": "snu-music",
+  "name": {
+    "ko": "서울대학교 음악대학",
+    "en": "SNU College of Music"
+  },
+  "status": "extracted",
+  "group": "snu",
+  "source": "https://music.snu.ac.kr/ (2026-10-27 확인, 브라우저 계산된 스타일). 관찰값: 짙은 바탕 #212121, 남청 글자 #193988, 연회색 #f8f8f8. 파생값: --accent-hover(강조색을 흰색과 18% 섞음), --accent-soft(강조색을 흰색과 86% 섞음)",
+  "note": {
+    "ko": "음악대학 홈페이지(https://music.snu.ac.kr/) 화면에서 2026-10-27 에 읽은 색을 바탕으로 만든 배색입니다. 공식 UI 규정 색이 아닙니다. 로고는 포함하지 않습니다. 기관 시그니처(로고)는 서울대 UI 가이드에 따라 SNU Blue·SNU Gray·검정·흰색만 사용합니다.",
+    "en": "Palette derived from colours read on the college website on 2026-10-27; not an official UI specification. No logo is bundled."
+  },
+  "vars": {
+    "--primary": "#193988",
+    "--primary-deep": "#212121",
+    "--hero-end": "#193988",
+    "--accent": "#f8f8f8",
+    "--accent-ink": "#212121",
+    "--accent-line": "#193988",
+    "--font-head": "\"Noto Sans KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", system-ui, sans-serif",
+    "--accent-hover": "#f9f9f9",
+    "--accent-soft": "#fefefe"
+  }
+}

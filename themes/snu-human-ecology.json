@@ -1,0 +1,23 @@
+{
+  "id": "snu-human-ecology",
+  "name": {
+    "ko": "서울대학교 생활과학대학",
+    "en": "SNU College of Human Ecology"
+  },
+  "status": "extracted",
+  "group": "snu",
+  "source": "https://che.snu.ac.kr/ (2026-10-27 확인, 브라우저 계산된 스타일). 관찰값: #0f0f70(SNU Blue 공식값과 같음), #0b0b68, 자홍 강조 #cc3366. 파생값: --accent-hover(강조색을 흰색과 18% 섞음), --accent-soft(강조색을 흰색과 86% 섞음)",
+  "note": {
+    "ko": "생활과학대학 홈페이지(https://che.snu.ac.kr/) 화면에서 2026-10-27 에 읽은 색을 바탕으로 만든 배색입니다. 공식 UI 규정 색이 아닙니다. 로고는 포함하지 않습니다. 기관 시그니처(로고)는 서울대 UI 가이드에 따라 SNU Blue·SNU Gray·검정·흰색만 사용합니다.",
+    "en": "Palette derived from colours read on the college website on 2026-10-27; not an official UI specification. No logo is bundled."
+  },
+  "vars": {
+    "--primary": "#0f0f70",
+    "--primary-deep": "#0b0b68",
+    "--hero-end": "#0f0f70",
+    "--accent": "#cc3366",
+    "--accent-ink": "#ffffff",
+    "--accent-hover": "#d55882",
+    "--accent-soft": "#f8e2ea"
+  }
+}
