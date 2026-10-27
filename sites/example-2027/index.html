@@ -1857,7 +1857,9 @@ body { word-break: keep-all; overflow-wrap: break-word; }
     var embedded = document.getElementById('site-data');
     var data = null;
     try { data = embedded ? JSON.parse(embedded.textContent) : null; } catch (e) { data = null; }
-    if (location.protocol === 'file:' || typeof fetch !== 'function') return Promise.resolve(data);
+    // data-embedded-only: 웹 도구의 미리보기처럼 내장 데이터만 써야 할 때 (서버의 conference.json 을 읽지 않음)
+    var embeddedOnly = embedded && embedded.hasAttribute('data-embedded-only');
+    if (embeddedOnly || location.protocol === 'file:' || typeof fetch !== 'function') return Promise.resolve(data);
     return fetch('conference.json', { cache: 'no-store' })
       .then(function (res) { return res.ok ? res.json() : data; })
       .then(function (json) { return (json && json.title) ? json : data; })

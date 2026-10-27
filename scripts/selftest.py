@@ -12,6 +12,8 @@
   6. 포스터: 네 가지 배치·네 가지 용지로 HTML 이 만들어지고, 자리표시자·평문 이메일이 없으며, 잘못된 poster 설정은 거부됨
   7. OpenDesign 연결 파일: 디자인 시스템 패키지(manifest.json·DESIGN.md·tokens.css)와 포스터 브리프
   (PDF·PNG 변환과 글자 맞춤은 브라우저가 필요해 여기서는 시험하지 않는다.)
+  8. 웹 도구(index.html + web/): 파일 목록(web/manifest.json)이 최신인지, web/bridge.py 가 만든 홈페이지·ZIP 이
+     build.py 와 같은지, 등록 스크립트·포스터·글자 뽑기·ZIP 불러오기(경로 조작 차단)
 """
 import json
 import re
@@ -100,8 +102,8 @@ def main():
         import zipfile
         with zipfile.ZipFile(zip_path) as z:
             names = z.namelist()
-        ok(r.returncode == 0 and any(n.endswith("/SKILL.md") for n in names) and not any("/dist/" in n for n in names),
-           f"스킬 ZIP 생성 ({len(names)}개 파일, dist 제외)")
+        ok(r.returncode == 0 and any(n.endswith("/SKILL.md") for n in names) and not any("/dist/" in n or "/web/" in n or n.endswith(".whl") for n in names),
+           f"스킬 ZIP 생성 ({len(names)}개 파일, dist·웹 도구 제외)")
 
         # 5. 공개 저장소 점검
         sites = [p.name for p in (ROOT / "sites").iterdir() if p.is_dir()]
@@ -160,6 +162,74 @@ def main():
         title_ko = data["title"]["ko"].replace("\n", " ")
         ok(title_ko in b_md and data["site_url"] in b_md and not EMAIL_RE.search(b_md) and "반드시 지킬 것" in b_md,
            "포스터 브리프: 행사명·홈페이지 주소·규칙 포함, 이메일 없음")
+
+        # 8. 웹 도구 (브라우저 안 파이썬이 쓰는 web/bridge.py 를 여기서는 컴퓨터 파이썬으로 시험)
+        import io as _io
+        import os as _os
+        r = subprocess.run([sys.executable, str(ROOT / "scripts" / "make_web_manifest.py"), "--check"], capture_output=True, text=True)
+        ok(r.returncode == 0, "web/manifest.json 최신 (scripts/template/themes 를 고치면 make_web_manifest.py 실행)")
+        man = json.loads((ROOT / "web" / "manifest.json").read_text(encoding="utf-8"))
+        missing = [f for f in man["files"] + [man["vendor"]["segno"], man["example"]["conference"]] if not (ROOT / f).exists()]
+        ok(not missing, "웹 도구가 내려받는 파일이 모두 있음" + (f" — 없음: {missing}" if missing else ""))
+        idx = (ROOT / "index.html").read_text(encoding="utf-8")
+        ok('src="web/main.js"' in idx and (ROOT / ".nojekyll").exists() and all((ROOT / "web" / n).exists() for n in ["main.js", "form.js", "fields.js", "engine.js", "ai.js", "builder.css"]),
+           "웹 도구 첫 화면(index.html)·스크립트·.nojekyll 존재")
+        work = tmp / "webwork"
+        _os.environ["CONF_SITE_ROOT"] = str(ROOT)
+        _os.environ["CONF_SITE_WORK"] = str(work)
+        sys.path.insert(0, str(ROOT / "web"))
+        import bridge  # noqa: E402
+        (work / "assets").mkdir(parents=True, exist_ok=True)
+        shutil.copytree(example / "assets", work / "assets", dirs_exist_ok=True)
+        ex_json = (example / "conference.json").read_text(encoding="utf-8")
+        chk = json.loads(bridge.check(ex_json))
+        ok(not chk["errors"], f"웹 도구 검사(check): 예시 오류 0건 (경고 {len(chk['warnings'])}건)")
+        ok("JSON 문법 오류" in json.loads(bridge.check('{"a": 1,}'))["errors"][0], "웹 도구 검사: JSON 문법 오류 줄 번호 안내")
+        pv = bridge.preview(ex_json)
+        ok("data-embedded-only" in pv and "예시 학술 워크숍 2027" in pv and "data:application/pdf;base64," in pv, "웹 도구 미리보기: 내장 데이터만 사용, 올린 파일을 data URI 로 표시")
+        zb = bridge.make_zip(ex_json)
+        zf = zipfile.ZipFile(_io.BytesIO(zb))
+        ref_dir = tmp / "web-ref"
+        shutil.copytree(example, ref_dir / "src")
+        build(ref_dir / "src", ref_dir / "dist", quiet=True)
+        ok(zf.read("index.html").decode() == (ref_dir / "dist" / "index.html").read_text(encoding="utf-8")
+           and zf.read("conference.json").decode() == (ref_dir / "dist" / "conference.json").read_text(encoding="utf-8"),
+           "웹 도구 ZIP 의 index.html·공개본이 build.py --deploy 결과와 같음")
+        ok(sorted(n for n in zf.namelist() if n.startswith("assets/")) == ["assets/poster.pdf", "assets/slides/gildong-hong.pdf"],
+           "웹 도구 ZIP: conference.json 이 가리키는 파일만 포함")
+        bad = dict(data)
+        bad["slug"] = "Bad Slug"
+        try:
+            bridge.make_zip(json.dumps(bad, ensure_ascii=False))
+            ok(False, "웹 도구 ZIP: 검사 오류가 있으면 만들지 않음")
+        except ValueError:
+            ok(True, "웹 도구 ZIP: 검사 오류가 있으면 만들지 않음")
+        reg = json.loads(bridge.registration_code(ex_json))
+        ok("CONFIG" in reg["code"] and reg["options"] == len(data["registration"].get("attendance_options") or []), "웹 도구 등록 스크립트 생성")
+        pst = json.loads(bridge.poster(ex_json, "program", "A2", "both", ""))
+        ok(pst["info"]["layout"] == "program" and "@page" in pst["html"], "웹 도구 포스터 생성")
+        ok(len(json.loads(bridge.themes_list())) == len(presets), "웹 도구 테마 목록 = 프리셋 수")
+        hw = tmp / "t.hwpx"
+        with zipfile.ZipFile(hw, "w") as z:
+            z.writestr("Contents/section0.xml", '<hs:sec><hp:p id="1"><hp:run><hp:t>행사명: 시험 &amp; 학회</hp:t></hp:run></hp:p><hp:p id="2"><hp:run><hp:t>일시: 2027-02-11</hp:t></hp:run></hp:p></hs:sec>')
+        dx = tmp / "t.docx"
+        with zipfile.ZipFile(dx, "w") as z:
+            z.writestr("word/document.xml", '<w:document><w:body><w:p><w:r><w:t>장소: 129동</w:t></w:r></w:p></w:body></w:document>')
+        ok(bridge.extract_text(str(hw)) == "행사명: 시험 & 학회\n일시: 2027-02-11" and bridge.extract_text(str(dx)) == "장소: 129동",
+           "웹 도구 글자 뽑기: 한글(hwpx)·워드(docx)")
+        zpath = tmp / "re.zip"
+        zpath.write_bytes(zb)
+        shutil.rmtree(work / "assets")
+        (work / "assets").mkdir()
+        imp = json.loads(bridge.import_zip(str(zpath)))
+        ok(json.loads(imp["json"])["slug"] == "example-2027" and sorted(imp["assets"]) == ["assets/poster.pdf", "assets/slides/gildong-hong.pdf"]
+           and (work / "assets" / "poster.pdf").exists(), "웹 도구 ZIP 불러오기: 내용·파일 복원")
+        evil = tmp / "evil.zip"
+        with zipfile.ZipFile(evil, "w") as z:
+            z.writestr("conference.json", "{}")
+            z.writestr("assets/../../escape.txt", "x")
+        bridge.import_zip(str(evil))
+        ok(not (work.parent / "escape.txt").exists() and not (work / "escape.txt").exists(), "웹 도구 ZIP 불러오기: 폴더 밖으로 쓰는 경로(..) 차단")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     print("FAILED %d" % fails if fails else "ALL PASSED")

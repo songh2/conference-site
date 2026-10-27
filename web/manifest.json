@@ -1,0 +1,55 @@
+{
+  "version": "2f4475fbf492",
+  "files": [
+    "scripts/build.py",
+    "scripts/validate.py",
+    "scripts/themes.py",
+    "scripts/emailcodec.py",
+    "scripts/make_poster.py",
+    "scripts/make_registration_script.py",
+    "scripts/export_open_design.py",
+    "template/index.template.html",
+    "template/style.css",
+    "template/app.js",
+    "template/poster.css",
+    "template/poster.js",
+    "template/registration.gs",
+    "template/conference.skeleton.json",
+    "references/schema.md",
+    "web/bridge.py",
+    "themes/_template.json",
+    "themes/burgundy.json",
+    "themes/charcoal.json",
+    "themes/default.json",
+    "themes/forest.json",
+    "themes/slate.json",
+    "themes/snu-art.json",
+    "themes/snu-business.json",
+    "themes/snu-cals.json",
+    "themes/snu-cls.json",
+    "themes/snu-education.json",
+    "themes/snu-engineering.json",
+    "themes/snu-human-ecology.json",
+    "themes/snu-humanities.json",
+    "themes/snu-medicine.json",
+    "themes/snu-music.json",
+    "themes/snu-nursing.json",
+    "themes/snu-pharmacy.json",
+    "themes/snu-science.json",
+    "themes/snu-social.json",
+    "themes/snu-ti.json",
+    "themes/snu-vet.json",
+    "themes/snu.json"
+  ],
+  "example": {
+    "conference": "sites/example-2027/conference.json",
+    "assets": [
+      "assets/poster.pdf",
+      "assets/slides/gildong-hong.pdf"
+    ],
+    "base": "sites/example-2027"
+  },
+  "vendor": {
+    "segno": "web/vendor/segno-1.6.6-py3-none-any.whl"
+  }
+}

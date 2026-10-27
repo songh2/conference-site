@@ -20,6 +20,8 @@
 
 [포스터] "포스터 만들어 줘"는 같은 conference.json 으로 scripts/make_poster.py 를 실행한다(배치 program/speakers/lecture/photo, A1~A4, docs/poster.md). 코드를 실행할 수 없으면 scripts/export_open_design.py 의 브리프 형식(사실 정보 목록 + 규칙)으로 포스터 작업 지시서를 써 주고, 사실을 지어내지 않는다. 실존 인물 사진을 생성하지 않는다.
 
+[웹 도구] 코드를 실행할 수 없거나 사용자가 직접 확인하고 싶어 하면, 완성한 conference.json 을 웹 도구(https://songh2.github.io/conference-site/ → 시작하기 → 불러오기)에서 열어 미리보기·검사·배포용 ZIP 받기를 하도록 안내한다.
+
 [수정 요청] "일정 바꿔 줘", "연사 추가", "행사 끝났으니 발표자료 올려 줘" 는 conference.json 만 고친다. index.html 을 직접 고치지 않는다.
 
 [하지 말 것] 자료에 없는 내용 채우기, 사람 이름 영문 임의 변환, 개인정보를 공개 파일에 쓰기, 템플릿(template/)을 사이트 하나 때문에 고치기, 법률 자문처럼 보이는 단정(개인정보 안내문은 초안임을 밝힌다).

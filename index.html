@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>학회 홈페이지 만들기 — conference-site</title>
+<meta name="description" content="학회·워크숍·세미나 홈페이지(한/영)와 사전등록·포스터를 브라우저에서 만들고 GitHub Pages 에 올리는 무료 도구">
+<link rel="stylesheet" href="web/builder.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <b>학회 홈페이지 만들기</b>
+    <span class="sub">conference-site 웹 도구</span>
+  </div>
+  <div class="top-right">
+    <span id="engine" class="engine busy" aria-live="polite">◌ 준비 중</span>
+    <span id="saved" class="saved"></span>
+    <button type="button" class="btn ghost" id="btn-save" title="고칠 때 다시 불러오는 원본(이메일 평문 포함) — 공개 저장소에 올리지 마세요">원본 저장</button>
+    <button type="button" class="btn" id="btn-zip">배포용 ZIP 받기</button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="tabs" id="tabs" aria-label="단계"></nav>
+  <main class="panel" id="panel" tabindex="-1">
+    <noscript><p>이 도구는 자바스크립트가 켜져 있어야 동작합니다.</p></noscript>
+  </main>
+  <section class="preview" aria-label="홈페이지 미리보기">
+    <div class="preview-bar">
+      <b>미리보기</b>
+      <div class="seg" role="group" aria-label="화면 크기">
+        <button type="button" id="dev-pc" aria-pressed="true">PC</button>
+        <button type="button" id="dev-mobile" aria-pressed="false">휴대폰</button>
+      </div>
+      <button type="button" class="btn-sm ghost" id="reload-preview" title="미리보기 새로 그리기">새로고침</button>
+      <button type="button" class="btn-sm ghost" id="open-preview">새 창</button>
+    </div>
+    <div id="preview-msg" class="preview-msg" aria-live="polite"></div>
+    <div class="frame-wrap">
+      <iframe id="preview-frame" title="만들고 있는 홈페이지 미리보기" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe>
+    </div>
+  </section>
+</div>
+<button type="button" class="toggle-preview" id="toggle-preview">미리보기 열기/닫기</button>
+<div id="toasts" class="toasts"></div>
+
+<footer class="foot">
+  만든 곳: <a href="https://github.com/songh2/conference-site" target="_blank" rel="noopener">conference-site</a> (MIT) · 서울대학교 공식 서비스가 아닌 개인 프로젝트입니다 ·
+  입력한 내용은 이 브라우저에만 저장됩니다 · <a href="https://github.com/songh2/conference-site/blob/main/docs/manual-web.md" target="_blank" rel="noopener">사용 설명서</a>
+</footer>
+<script type="module" src="web/main.js"></script>
+</body>
+</html>

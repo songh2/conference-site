@@ -8,5 +8,6 @@
 - 자료에 없는 내용(영문 성명, 등록비, 마감일, 소개글)을 지어내지 않고 `_todo` 에 남깁니다.
 - 이메일·연락처·참가자 명단(이름·소속 외)을 `conference.json` 이나 공개 저장소에 쓰지 않습니다. 이메일은 원본에 평문으로 두면 `build.py` 가 공개본에서 난독화합니다.
 - 포스터: `python3 scripts/make_poster.py sites/<slug> [--all] [--layout …] [--size A2]` → `dist/<slug>/poster/`. PDF 에는 Playwright, QR 에는 segno 필요(`docs/poster.md`). OpenDesign 연계는 `scripts/export_open_design.py`(`docs/open-design.md`).
+- 웹 도구(`index.html`, `web/`)는 `web/bridge.py` 가 `scripts/*.py` 를 브라우저 안 파이썬(Pyodide)으로 실행한다. 계산 로직은 `scripts/` 에만 두고, `scripts/`·`template/`·`themes/` 를 고치면 `python3 scripts/make_web_manifest.py` 로 `web/manifest.json` 을 갱신한다(`docs/manual-web.md` 8절).
 - 자체 시험: `python3 scripts/selftest.py` (예시 사이트 빌드, 빈 템플릿, 테마, 평문 이메일 검사).
 - 참고 문서: `references/schema.md`(항목 설명), `docs/`(사람용 매뉴얼).

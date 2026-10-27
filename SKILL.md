@@ -68,7 +68,7 @@ python3 scripts/build.py sites/<slug> --deploy dist/<slug>
 
 1. 만든 파일과 위치 (`sites/<slug>/`, `dist/<slug>/`)
 2. **확인 필요 목록** — `_todo` 와 `validate.py` 경고를 사람이 읽기 쉽게 정리 (영문명 미확인, 등록폼 링크, 사진 등)
-3. 다음 단계 — 배포는 `docs/manual-github-pages.md`(공개 GitHub 저장소에 `dist/<slug>/` 내용을 올리고 Settings → Pages 활성화) 로 안내하고, 등록 양식을 쓰면 `docs/manual-google-sheet.md`, 마감일이 있으면 `references/checklist.md` 기준으로 남은 준비 업무를 한 줄씩. **파이썬을 실행할 수 없는 환경**이면 `conference.json` 만 완성해 주고 `blank/index.html` + `tools/encode-email.html` 경로(`docs/manual-chatgpt.md` 4절)를 안내한다.
+3. 다음 단계 — 배포는 `docs/manual-github-pages.md`(공개 GitHub 저장소에 `dist/<slug>/` 내용을 올리고 Settings → Pages 활성화) 로 안내하고, 등록 양식을 쓰면 `docs/manual-google-sheet.md`, 마감일이 있으면 `references/checklist.md` 기준으로 남은 준비 업무를 한 줄씩. **파이썬을 실행할 수 없는 환경**이면 `conference.json` 만 완성해 주고, 사용자가 **웹 도구**(https://songh2.github.io/conference-site/ → 시작하기 → 불러오기)에서 그 파일을 열어 미리보기·검사·ZIP 받기를 하도록 안내한다(`docs/manual-web.md`). 웹 도구를 쓸 수 없으면 `blank/index.html` + `tools/encode-email.html` 경로(`docs/manual-chatgpt.md` 4절).
 
 ### 6-1. 포스터 만들기
 "포스터 만들어 줘" 요청은 같은 `conference.json` 으로 처리한다(`docs/poster.md`).
@@ -116,6 +116,7 @@ python3 scripts/import_participants.py sites/<slug> responses.csv            # �
 - `docs/manual-github-pages.md` — GitHub 가입부터 Pages 공개·수정·인수인계까지 (초보자용)
 - `docs/manual-google-sheet.md` — 등록 양식용 구글 계정 선택과 인수인계
 - `docs/manual-chatgpt.md`, `docs/manual-claude.md` — 각 AI 도구에서 이 스킬을 쓰는 방법
+- `docs/manual-web.md` — 설치 없이 브라우저에서 쓰는 웹 도구(같은 scripts 를 브라우저 안에서 실행)
 - `docs/themes.md` — 테마 프리셋과 로고
 - `docs/poster.md` — 인쇄용 포스터 만들기 (배치 4종, 크기, 인쇄 점검표)
 - `docs/open-design.md` — OpenDesign 에 행사 정보·배색을 가져가 포스터 시안을 다듬는 방법

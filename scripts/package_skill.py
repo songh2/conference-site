@@ -14,7 +14,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 EXCLUDE_DIRS = {"dist", ".git", "__pycache__", "node_modules", ".DS_Store"}
-EXCLUDE_SUFFIX = {".pyc", ".zip"}
+EXCLUDE_SUFFIX = {".pyc", ".zip", ".whl"}
+# 웹 도구(브라우저용, GitHub Pages 로 공개)는 스킬 묶음에 넣지 않는다 — AI 도우미에게는 필요 없고 크기만 늘린다
+EXCLUDE_TOP = {"web", "index.html", ".nojekyll"}
 
 
 def main():
@@ -26,7 +28,7 @@ def main():
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
         for p in sorted(ROOT.rglob("*")):
             rel = p.relative_to(ROOT)
-            if any(part in EXCLUDE_DIRS for part in rel.parts):
+            if any(part in EXCLUDE_DIRS for part in rel.parts) or rel.parts[0] in EXCLUDE_TOP:
                 continue
             if p.is_dir() or p.suffix in EXCLUDE_SUFFIX:
                 continue

@@ -4,6 +4,7 @@
 행사 정보 몇 가지만 주면 **한국어/영어 전환 홈페이지 한 장**이 나오고, GitHub Pages 같은 무료 호스팅에 올려 **몇 년이고 유지**할 수 있습니다.
 
 - 누구나 자유롭게 쓸 수 있습니다 (MIT 라이선스). 서울대학교 구성원(행정 담당자·대학원생·교수)을 1차 대상으로 썼지만 어느 기관이든 쓸 수 있습니다.
+- **웹 도구**: 설치 없이 브라우저에서 칸을 채우고 ZIP 을 받아 올리면 끝 → **https://songh2.github.io/conference-site/** (`docs/manual-web.md`)
 - **Claude · ChatGPT(Edu) · Codex** 어디서나 같은 폴더를 "스킬"로 올려 씁니다. 파이썬을 못 쓰는 환경을 위한 경로도 있습니다.
 - 서울대학교 공식 서비스가 아니라 수리과학부 행정 담당자가 만든 개인 프로젝트입니다. 기관 로고·색상의 사용은 각 기관 규정을 따르세요.
 
@@ -25,6 +26,9 @@
 예시 사이트: `sites/example-2027/` (모든 인물·기관은 가상). 빌드하면 `sites/example-2027/index.html` 을 더블클릭해 볼 수 있습니다.
 
 ## 빨리 시작하기
+
+### 웹 도구 (설치 없음, 가장 쉬움)
+**https://songh2.github.io/conference-site/** 를 Chrome·Edge 로 엽니다 → 예시로 둘러보기 또는 새로 만들기 → 칸 채우기(오른쪽에 바로 미리보기) → 배포용 ZIP 받기 → "GitHub에 올리기" 탭 순서대로. 공문·포스터를 올리면 AI 가 칸을 채우는 기능도 있습니다(팩트챗·OpenAI 등 본인 API 키). 입력 내용은 그 브라우저에만 저장됩니다. → `docs/manual-web.md`
 
 ### AI 도우미에게 시키기
 | 도구 | 설정 방법 |
@@ -54,6 +58,7 @@ python3 scripts/build.py sites/my-workshop-2027 --deploy dist/my-workshop-2027  
 
 | 문서 | 내용 |
 |---|---|
+| `docs/manual-web.md` | **웹 도구**(설치 없음) 사용법 — 채우기, AI 자동 채우기(팩트챗·OpenAI), ZIP 받기, 저장 위치, 문제 해결 |
 | `docs/manual-github-pages.md` | **GitHub 가입 → 조직 → 저장소 → 업로드 → Pages 켜기 → 수정 → 인수인계** (초보자용, 클릭만) |
 | `docs/manual-google-sheet.md` | 등록 양식용 **구글 계정 선택(개인/학교/부서 공용)**, 시트·Apps Script 만들기, 계정 옮기기, 개인정보 운영 |
 | `docs/manual-chatgpt.md` | ChatGPT(Edu) Skills·프로젝트·Codex 에서 쓰기, 파이썬 없이 쓰기 |
@@ -85,6 +90,7 @@ conference-site/            ← 이 폴더 자체가 스킬 (SKILL.md 가 있는
 ├── references/             AI 와 사람이 같이 보는 참고 문서
 ├── docs/                   사람용 매뉴얼
 ├── chatgpt/                ChatGPT 프로젝트 지시문
+├── index.html, web/        웹 도구 (GitHub Pages 로 공개, scripts/*.py 를 브라우저 안 파이썬으로 실행)
 ├── tools/encode-email.html 브라우저에서 이메일 보호값 만들기 (파이썬 불필요)
 ├── blank/index.html        빈 템플릿 (conference.json 만 올려도 동작)
 ├── sites/example-2027/     가상 예시 사이트
@@ -102,7 +108,7 @@ conference-site/            ← 이 폴더 자체가 스킬 (SKILL.md 가 있는
 ```bash
 python3 scripts/selftest.py
 ```
-예시 사이트 빌드, 모든 테마 빌드, 빈 템플릿 생성, 공개본 평문 이메일 검사, 테마 값 검증을 확인합니다. 브라우저 동작 시험(언어 전환, 등록 양식, 이메일 창, 인쇄)은 개발 중 Chromium 으로 확인했으며 저장소에는 포함하지 않았습니다.
+예시 사이트 빌드, 모든 테마 빌드, 빈 템플릿 생성, 공개본 평문 이메일 검사, 테마 값 검증, 포스터, 웹 도구 연결 모듈(결과가 build.py 와 같은지)을 확인합니다. `scripts/`·`template/`·`themes/` 를 고치면 `python3 scripts/make_web_manifest.py` 로 웹 도구 파일 목록도 갱신합니다. 브라우저 동작 시험(언어 전환, 등록 양식, 이메일 창, 인쇄)은 개발 중 Chromium 으로 확인했으며 저장소에는 포함하지 않았습니다.
 
 ## 개선 아이디어
 - 단과대학 프리셋을 공식 색상 값으로 교체 (현재 대부분 홈페이지 화면에서 읽은 값 — 공식 수치를 아시면 기여 환영)
