@@ -111,6 +111,13 @@ textarea.f-input { resize: vertical; }
 .start-card b { font-size: 16px; color: var(--primary-deep); }
 .start-card span { font-size: 13px; color: var(--muted); }
 .ai { border-color: #d9c6f0; background: #fcfaff; }
+.key-warn { background: var(--warn-soft); border: 1px solid #f0d58a; border-radius: 8px; padding: 10px 14px; margin: 8px 0 12px; font-size: 13.5px; color: #4a3500; }
+.key-warn ul { margin: 6px 0 0; padding-left: 18px; }
+.key-warn li { margin: 3px 0; }
+.key-row { display: flex; gap: 6px; align-items: center; margin-top: 3px; }
+.key-row .f-input { flex: 1; margin-top: 0 !important; font-family: ui-monospace, Menlo, Consolas, monospace; }
+.key-shape.ok { color: var(--ok); }
+.key-shape.bad { color: var(--bad); }
 .ai-status { font-size: 13px; color: var(--ink-2); min-height: 1.4em; }
 .ok-box { background: var(--ok-soft); border-color: #bfe3cc; }
 .kv { border-collapse: collapse; width: 100%; font-size: 14px; margin: 4px 0 8px; }

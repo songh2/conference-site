@@ -417,10 +417,33 @@ function aiPanel() {
   const box = h('div', { class: 'box ai' });
   box.appendChild(h('h3', { text: '자료에서 자동으로 채우기 (AI, 선택)' }));
   box.appendChild(h('p', { class: 'f-help', text: '공문·포스터(PDF·그림)·한글(HWPX)·워드 파일을 올리면 AI 가 읽어 칸을 채웁니다. 본인의 API 키가 필요하고, 사용료는 키 주인 계정에서 나갑니다. 올린 자료는 고른 AI 서비스로 전송되므로 참가자 명단 같은 개인정보 파일은 올리지 마세요.' }));
+  box.appendChild(h('div', { class: 'key-warn', role: 'note' }, [
+    h('b', { text: '⚠ API 키 안내 — 꼭 읽어 주세요' }),
+    h('ul', {}, [
+      h('li', {}, [h('b', { text: '이 웹 도구에 쓸 키는 따로 새로 발급받으세요.' }), ' 평소 쓰는 키를 넣지 마세요. 그래야 유출이 의심될 때 발급한 곳(팩트챗·OpenAI 관리 화면)에서 그 키만 바로 삭제할 수 있습니다.']),
+      h('li', {}, [h('b', { text: 'API 키의 관리와 사용 책임은 사용자 본인에게 있습니다.' }), ' 키가 새면 다른 사람이 키 주인의 크레딧(사용료)을 쓸 수 있으니 각별히 유의하세요.']),
+      h('li', { text: '기본으로 키는 이 화면에만 있고 어디에도 저장되지 않습니다(새로고침하면 다시 입력). 고른 AI 서비스 주소 외의 곳으로는 보내지 않습니다.' }),
+      h('li', { text: '공용 PC 에서는 "키 기억"을 켜지 말고, 다 쓰면 "키 지우기"를 누르세요. 다 쓴 키는 발급한 곳에서 삭제해 두는 것이 가장 안전합니다.' }),
+    ]),
+  ]));
   const prov = h('select', { class: 'f-input' }, Object.entries(AI.PROVIDERS).map(([k, p]) => h('option', { value: k, text: p.name })));
   prov.value = s.provider;
-  const base = h('input', { class: 'f-input', type: 'text', value: s.base });
-  const key = h('input', { class: 'f-input', type: 'password', value: s.key, autocomplete: 'off', placeholder: 'API 키' });
+  const base = h('input', { class: 'f-input', type: 'text', value: s.base, id: 'ai-base', spellcheck: 'false' });
+  const key = h('input', { class: 'f-input', type: 'password', value: s.key, autocomplete: 'off', spellcheck: 'false', placeholder: 'API 키 (가려져 보입니다)', id: 'ai-key', 'aria-describedby': 'ai-key-shape' });
+  const shape = h('div', { class: 'f-help key-shape', id: 'ai-key-shape' });
+  let hideTimer = null;
+  const showBtn = h('button', { type: 'button', class: 'btn-sm ghost', text: '보기', 'aria-pressed': 'false', title: '오탈자 확인용으로 키를 잠깐 보여 줍니다(15초 뒤 다시 가려짐)' });
+  const setShown = (on) => {
+    key.type = on ? 'text' : 'password';
+    showBtn.textContent = on ? '숨기기' : '보기';
+    showBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    clearTimeout(hideTimer);
+    if (on) hideTimer = setTimeout(() => setShown(false), 15000);
+  };
+  showBtn.addEventListener('click', () => setShown(key.type === 'password'));
+  const updShape = () => { const r = AI.keyShape(key.value); shape.textContent = r.text; shape.className = 'f-help key-shape ' + (r.ok ? 'ok' : 'bad'); };
+  key.addEventListener('input', updShape);
+  updShape();
   const remember = h('input', { type: 'checkbox', id: 'ai-remember' }); remember.checked = s.remember;
   const model = h('input', { class: 'f-input', type: 'text', value: s.model, list: 'ai-models' });
   const models = h('datalist', { id: 'ai-models' });
@@ -429,8 +452,13 @@ function aiPanel() {
   const persist = () => { Object.assign(s, { provider: prov.value, base: base.value.trim(), key: key.value.trim(), model: model.value.trim(), remember: remember.checked }); AI.saveSettings(s); sync(); };
   prov.addEventListener('change', () => { const p = AI.PROVIDERS[prov.value]; base.value = p.base; model.value = p.model; persist(); });
   [base, key, model].forEach((el) => el.addEventListener('change', persist));
+  key.addEventListener('input', () => { s.key = key.value.trim(); AI.saveSettings(s); });
   model.addEventListener('input', sync);
-  remember.addEventListener('change', persist);
+  remember.addEventListener('change', () => {
+    if (remember.checked && !confirm('키를 이 브라우저에 기억할까요?\n\n· 이 도구는 songh2.github.io 주소에 있어, 같은 주소의 다른 페이지도 저장된 키를 읽을 수 있습니다.\n· 이 컴퓨터를 쓰는 다른 사람도 키를 쓸 수 있습니다.\n· 공용 PC 에서는 켜지 마세요. 개인 PC 라도 다 쓰면 "키 지우기"를 누르세요.\n\n권장하지 않습니다. 그래도 켜려면 [확인]을 누르세요.')) { remember.checked = false; }
+    persist();
+    if (remember.checked) toast('키를 이 브라우저에 기억합니다. 다 쓰면 "키 지우기"를 누르세요.');
+  });
   sync();
   const files = h('input', { type: 'file', multiple: true, accept: '.pdf,.png,.jpg,.jpeg,.webp,.gif,.hwpx,.docx,.txt,.md', class: 'f-input' });
   const extra = h('textarea', { class: 'f-input', rows: 2, placeholder: '추가 요청 (선택) 예: 테마는 자연과학대학으로, 참석 구분은 3일/2일/1일차/2일차' });
@@ -441,13 +469,13 @@ function aiPanel() {
     h('div', { class: 'grid2' }, [
       h('label', { class: 'f-label' }, ['AI 서비스', prov]),
       h('label', { class: 'f-label' }, ['주소', base]),
-      h('label', { class: 'f-label' }, ['API 키', key, keyHelp]),
+      h('div', { class: 'f-label' }, [h('label', { for: 'ai-key', text: 'API 키' }), h('div', { class: 'key-row' }, [key, showBtn]), shape, keyHelp]),
       h('label', { class: 'f-label' }, ['모델', model, models, modelHelp]),
     ]),
     h('div', { class: 'row' }, [
-      h('span', { class: 'chip' }, [remember, h('label', { for: 'ai-remember', text: '이 브라우저에 키 기억 (공용 PC 에서는 끄세요)' })]),
-      h('button', { type: 'button', class: 'btn-sm ghost', text: '키 지우기', onclick: () => { AI.forgetKey(); key.value = ''; persist(); toast('키를 지웠습니다.'); } }),
-      h('button', { type: 'button', class: 'btn-sm ghost', text: '모델 목록 불러오기', onclick: async () => { persist(); try { const ms = await AI.listModels(s); models.innerHTML = ''; ms.forEach((m) => models.appendChild(h('option', { value: m.id }))); toast(`모델 ${ms.length}개를 불러왔습니다. 모델 칸을 누르면 고를 수 있습니다.`); } catch (e) { toast(e.message, 'bad'); } } }),
+      h('span', { class: 'chip' }, [remember, h('label', { for: 'ai-remember', text: '이 브라우저에 키 기억 (권장하지 않음)' })]),
+      h('button', { type: 'button', class: 'btn-sm ghost', text: '키 지우기', onclick: () => { AI.forgetKey(); key.value = ''; remember.checked = false; persist(); updShape(); setShown(false); toast('키를 지웠습니다. (발급한 곳의 키 자체는 그곳에서 삭제해야 합니다)'); } }),
+      h('button', { type: 'button', class: 'btn-sm ghost', text: '모델 목록 불러오기', onclick: async () => { persist(); if (!guardBase(s)) return; try { const ms = await AI.listModels(s); models.innerHTML = ''; ms.forEach((m) => models.appendChild(h('option', { value: m.id }))); toast(`모델 ${ms.length}개를 불러왔습니다. 모델 칸을 누르면 고를 수 있습니다.`); } catch (e) { toast(e.message, 'bad'); } } }),
     ]),
     h('label', { class: 'f-label' }, ['자료 파일 (여러 개 가능)', files]),
     h('label', { class: 'f-label' }, ['추가 요청', extra]),
@@ -456,6 +484,7 @@ function aiPanel() {
       onclick: async (ev) => {
         persist();
         if (!files.files.length) return toast('자료 파일을 골라 주세요.');
+        if (!guardBase(s)) return;
         const btn = ev.currentTarget; btn.disabled = true; result.innerHTML = '';
         const t0 = Date.now();
         try {
@@ -485,6 +514,15 @@ function usageText(u) {
   const out = n(u.output_tokens ?? u.completion_tokens);
   if (inp || out) return ` · 사용량: 입력 ${inp || '?'} · 출력 ${out || '?'} 토큰`;
   return u.total_tokens ? ` · 사용량: ${n(u.total_tokens)} 토큰` : '';
+}
+// (나) 보내기 전 주소 확인: https 가 아니면 막고, 공식 주소가 아니면 한 번 더 묻는다
+function guardBase(s) {
+  const st = AI.baseStatus(s.base);
+  if (!st.ok) { toast(st.reason, 'bad'); return false; }
+  if (!st.official) {
+    return confirm(`공식 주소가 아닙니다: ${st.host}\n\n이 주소로 API 키와 자료가 전송됩니다. 직접 확인한 믿을 수 있는 주소일 때만 [확인]을 누르세요.\n(공식 주소: ${AI.OFFICIAL_HOSTS.join(', ')})`);
+  }
+  return true;
 }
 function showAiResult(box, merged, got, notes) {
   const sp = (merged.speakers || []).length;

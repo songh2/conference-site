@@ -31,6 +31,11 @@ export const PROVIDERS = {
 
 const SKEY = 'conf-builder:ai';
 const KKEY = 'conf-builder:aikey';
+// 키는 기본적으로 이 화면(메모리)에만 둔다. 새로고침하면 사라진다.
+// "키 기억"을 켰을 때만 이 브라우저의 localStorage 에 남긴다(같은 주소의 다른 페이지도 읽을 수 있어 권장하지 않음).
+let memoryKey = '';
+export const OFFICIAL_HOSTS = ['factchat-cloud.mindlogic.ai', 'api.openai.com'];
+
 export function loadSettings() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem(SKEY) || '{}'); } catch (e) { s = {}; }
@@ -39,18 +44,44 @@ export function loadSettings() {
   s.base = s.base || p.base;
   s.model = s.model || p.model;
   s.remember = !!s.remember;
-  try { s.key = (s.remember ? localStorage.getItem(KKEY) : sessionStorage.getItem(KKEY)) || ''; } catch (e) { s.key = ''; }
+  let stored = '';
+  try {
+    sessionStorage.removeItem(KKEY); // 예전 판이 남긴 값 정리
+    stored = s.remember ? (localStorage.getItem(KKEY) || '') : '';
+    if (!s.remember) localStorage.removeItem(KKEY);
+  } catch (e) { stored = ''; }
+  s.key = memoryKey || stored;
   return s;
 }
 export function saveSettings(s) {
+  memoryKey = s.key || '';
   try {
     localStorage.setItem(SKEY, JSON.stringify({ provider: s.provider, base: s.base, model: s.model, remember: s.remember, sendImages: s.sendImages }));
-    if (s.remember) { localStorage.setItem(KKEY, s.key || ''); sessionStorage.removeItem(KKEY); }
-    else { sessionStorage.setItem(KKEY, s.key || ''); localStorage.removeItem(KKEY); }
+    if (s.remember && s.key) localStorage.setItem(KKEY, s.key); else localStorage.removeItem(KKEY);
+    sessionStorage.removeItem(KKEY);
   } catch (e) { /* 저장할 수 없으면 이번 화면에서만 쓴다 */ }
 }
 export function forgetKey() {
+  memoryKey = '';
   try { localStorage.removeItem(KKEY); sessionStorage.removeItem(KKEY); } catch (e) { /* ignore */ }
+}
+
+// 보낼 주소 확인: https 가 아니면 보내지 않고, 공식 주소가 아니면 화면에서 한 번 더 묻는다
+export function baseStatus(base) {
+  let u;
+  try { u = new URL(base); } catch (e) { return { ok: false, reason: '주소 형식이 올바르지 않습니다.' }; }
+  if (u.protocol !== 'https:') return { ok: false, host: u.host, reason: 'https:// 로 시작하는 주소만 쓸 수 있습니다(키가 암호화되지 않은 채 전송될 수 있음).' };
+  return { ok: true, official: OFFICIAL_HOSTS.includes(u.host), host: u.host };
+}
+// 오탈자 확인용: 키 전체를 보이지 않고 모양만 알려 준다
+export function keyShape(k) {
+  const v = k || '';
+  if (!v) return { ok: false, text: '키가 비어 있습니다.' };
+  if (/\s/.test(v.trim())) return { ok: false, text: '키 중간에 빈칸이나 줄바꿈이 있습니다. 다시 복사해 붙여 넣으세요.' };
+  if (/[^\x21-\x7e]/.test(v.trim())) return { ok: false, text: '키에 한글이나 특수 기호가 섞여 있습니다. 다시 복사해 붙여 넣으세요.' };
+  const t = v.trim();
+  const trimmed = t !== v ? ' · 앞뒤 빈칸은 자동으로 지웁니다' : '';
+  return { ok: true, text: t.length > 10 ? `입력됨: ${t.slice(0, 4)}…${t.slice(-4)} (${t.length}자)${trimmed}` : `입력됨: ${t.length}자 — 너무 짧습니다. 끝까지 복사했는지 확인하세요.` };
 }
 
 function endpoint(s, path) {
@@ -92,6 +123,7 @@ async function fetchJson(url, opts, timeoutMs) {
 
 export async function listModels(s) {
   if (!s.key) throw new Error('API 키를 먼저 넣어 주세요.');
+  const st = baseStatus(s.base); if (!st.ok) throw new Error(st.reason);
   const body = await fetchJson(endpoint(s, '/models'), { headers: { Authorization: 'Bearer ' + s.key } }, 30000);
   const arr = Array.isArray(body) ? body : (body.data || body.models || []);
   return arr.map((m) => (typeof m === 'string' ? { id: m } : m)).filter((m) => m && m.id && (!m.type || m.type === 'llm'));
@@ -216,6 +248,7 @@ function userText(parts, extra) {
 export async function extract(s, system, parts, extra) {
   if (!s.key) throw new Error('API 키를 넣어 주세요.');
   if (!s.model) throw new Error('모델 이름을 넣어 주세요.');
+  const st = baseStatus(s.base); if (!st.ok) throw new Error(st.reason);
   const fmt = apiFormat(s);
   const imgs = canSendImages(s) ? parts.filter((p) => p.kind === 'image') : [];
   const dropped = parts.filter((p) => p.kind === 'image').length - imgs.length;
