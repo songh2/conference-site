@@ -28,7 +28,7 @@
 ## 빨리 시작하기
 
 ### 웹 도구 (설치 없음, 가장 쉬움)
-**https://songh2.github.io/conference-site/** 를 Chrome·Edge 로 엽니다 → 예시로 둘러보기 또는 새로 만들기 → 칸 채우기(오른쪽에 바로 미리보기) → 배포용 ZIP 받기 → "GitHub에 올리기" 탭 순서대로. 공문·포스터를 올리면 AI 가 칸을 채우는 기능도 있습니다(팩트챗·OpenAI 등 본인 API 키). 입력 내용은 그 브라우저에만 저장됩니다. → `docs/manual-web.md`
+**https://songh2.github.io/conference-site/** 를 Chrome·Edge 로 엽니다 → 예시로 둘러보기 또는 새로 만들기 → 칸 채우기(오른쪽에 바로 미리보기) → 배포용 ZIP 받기 → "GitHub에 올리기" 탭 순서대로. 공문·포스터를 올리면 AI 가 칸을 채우는 기능도 있습니다(본인 API 키 — 서울대 구성원은 팩트챗에서 발급, 개인적으로 LLM 서비스를 쓰는 분은 그 서비스의 키). 입력 내용은 그 브라우저에만 저장됩니다. → `docs/manual-web.md`
 
 ### AI 도우미에게 시키기
 | 도구 | 설정 방법 |

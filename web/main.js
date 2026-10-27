@@ -423,10 +423,13 @@ function aiPanel() {
       h('li', {}, [h('b', { text: '이 웹 도구에 쓸 키는 따로 새로 발급받으세요.' }), ' 평소 쓰는 키를 넣지 마세요. 그래야 유출이 의심될 때 발급한 곳(팩트챗·OpenAI 관리 화면)에서 그 키만 바로 삭제할 수 있습니다.']),
       h('li', {}, [h('b', { text: 'API 키의 관리와 사용 책임은 사용자 본인에게 있습니다.' }), ' 키가 새면 다른 사람이 키 주인의 크레딧(사용료)을 쓸 수 있으니 각별히 유의하세요.']),
       h('li', { text: '기본으로 키는 이 화면에만 있고 어디에도 저장되지 않습니다(새로고침하면 다시 입력). 고른 AI 서비스 주소 외의 곳으로는 보내지 않습니다.' }),
+      h('li', {}, [h('b', { text: '발급받은 키는 따로 안전하게 보관하세요.' }), ' 발급 화면에서 키 전체는 한 번만 보이고, 이 도구는 키를 저장하지 않습니다. 쓸 때마다 보관한 곳에서 꺼내 붙여 넣습니다.']),
       h('li', { text: '공용 PC 에서는 "키 기억"을 켜지 말고, 다 쓰면 "키 지우기"를 누르세요. 다 쓴 키는 발급한 곳에서 삭제해 두는 것이 가장 안전합니다.' }),
     ]),
   ]));
-  const prov = h('select', { class: 'f-input' }, Object.entries(AI.PROVIDERS).map(([k, p]) => h('option', { value: k, text: p.name })));
+  box.appendChild(keyGuide());
+  const groups = [...new Set(Object.values(AI.PROVIDERS).map((p) => p.group))];
+  const prov = h('select', { class: 'f-input' }, groups.map((g) => h('optgroup', { label: g }, Object.entries(AI.PROVIDERS).filter(([, p]) => p.group === g).map(([k, p]) => h('option', { value: k, text: p.name })))));
   prov.value = s.provider;
   const base = h('input', { class: 'f-input', type: 'text', value: s.base, id: 'ai-base', spellcheck: 'false' });
   const key = h('input', { class: 'f-input', type: 'password', value: s.key, autocomplete: 'off', spellcheck: 'false', placeholder: 'API 키 (가려져 보입니다)', id: 'ai-key', 'aria-describedby': 'ai-key-shape' });
@@ -506,6 +509,58 @@ function aiPanel() {
     status, result,
   );
   return box;
+}
+// API 키 발급·보관 안내 (2026-10-27 공식 문서로 확인한 내용만; 확인 못 한 것은 그렇다고 적는다)
+// 서울대 구성원 → 팩트챗 키, 개인적으로 쓰는 LLM 서비스 → 그 서비스의 키 로 나눠 안내한다.
+function keyGuide() {
+  const a = (href, text) => h('a', { href, target: '_blank', rel: 'noopener noreferrer', text });
+  const li = (...c) => h('li', {}, c);
+  const b = (t) => h('b', { text: t });
+  return h('details', { class: 'key-guide' }, [
+    h('summary', { text: '🔑 어떤 키를 쓰나요? · 발급·보관 방법 — 처음이면 펼쳐 보세요' }),
+    h('div', { class: 'key-who' }, [
+      h('div', {}, [b('서울대 구성원'), ' → 학교가 제공하는 ', b('팩트챗'), ' 에서 키를 발급받아 씁니다. AI 서비스는 "팩트챗 (서울대 구성원)".']),
+      h('div', {}, [b('개인적으로 쓰는 LLM 서비스가 있는 분'), ' → 그 서비스에서 받은 키를 넣습니다. AI 서비스는 "OpenAI (개인 계정)" 또는 "직접 입력". 사용료는 본인 부담입니다.']),
+    ]),
+    h('div', { class: 'grid2' }, [
+      h('section', {}, [
+        h('h4', { text: '① 서울대 구성원: 팩트챗 키 발급' }),
+        h('ol', {}, [
+          li('학교가 제공하는 팩트챗 웹사이트에 로그인합니다.'),
+          li('화면 왼쪽 아래의 ', b('API Gateway'), ' 버튼을 누릅니다.'),
+          li(b('API 키 생성'), ' 버튼을 눌러 키를 만듭니다. 이름을 붙일 수 있으면 "conference-site 웹도구"처럼 용도를 적습니다.'),
+          li('만들어진 키를 ', b('바로 복사해 따로 보관'), '합니다. 생성된 키는 다시 조회할 수 없습니다.'),
+          li('이 화면의 AI 서비스를 "팩트챗 (서울대 구성원)"으로 두고 키를 붙여 넣은 뒤 ', b('모델 목록 불러오기'), ' 로 확인합니다. 주소는 자동으로 ', h('code', { text: 'https://api.baze.co/v1/gateway' }), ' 가 들어갑니다.'),
+        ]),
+        h('p', { class: 'f-help', text: '사용료는 키를 만든 계정의 크레딧에서 차감됩니다. 키 삭제(해지)는 같은 API Gateway 화면에서 언제든 할 수 있고, 해지는 되돌릴 수 없습니다. 노출되었다면 즉시 해지하고 새 키를 발급받으세요.' }),
+        h('p', { class: 'f-help', text: '학교 ChatGPT Edu 에서는 API 키 발급 안내를 찾지 못했습니다. 서울대 구성원은 팩트챗 키를 쓰세요.' }),
+        h('p', { class: 'src' }, ['출처: 서울대 팩트챗 개발자 문서 ', a('https://docs.factchat.kr/docs/snu/api-gateway/getting-started/overview', '개요'), ' · ', a('https://docs.factchat.kr/docs/snu/api-gateway/getting-started/authentication', '인증(API 키)'), ' (2026-10-27 확인. 문서에는 로그인할 사이트가 "서울대학교 웹사이트"로만 적혀 있음)']),
+      ]),
+      h('section', {}, [
+        h('h4', { text: '② 개인 LLM 서비스: 예) OpenAI 키 발급' }),
+        h('ol', {}, [
+          li(a('https://platform.openai.com/', 'platform.openai.com'), ' (개발자 플랫폼)에 로그인합니다. 계정이 없으면 가입합니다.'),
+          li('API 사용료는 개발자 플랫폼의 ', a('https://platform.openai.com/account/billing/overview', '결제(Billing)'), ' 화면에서 충전한 크레딧으로 냅니다(본인 부담).'),
+          li('(권장) 이 도구용 프로젝트를 따로 두고, 프로젝트의 ', b('Limits'), ' 에서 ', b('Set Budget'), ' 으로 월 사용 한도를 정합니다. 알림만으로는 사용이 멈추지 않습니다.'),
+          li(a('https://platform.openai.com/api-keys', 'API keys'), ' 화면에서 ', b('Create new secret key'), ' → 이름(예: conference-site 웹도구)을 적고 만듭니다. 만료일을 고를 수 있으면 짧게 정합니다.'),
+          li('나온 키를 ', b('바로 복사해 따로 보관'), '합니다. 전체 키는 만들 때 한 번만 보여 줍니다.'),
+          li('이 화면의 AI 서비스를 "OpenAI (개인 계정)"로 바꾸고 키를 붙여 넣습니다.'),
+        ]),
+        h('p', { class: 'f-help', text: '키 삭제는 API keys 화면의 휴지통 아이콘, 사용 내역은 Usage 화면에서 봅니다. 그 밖의 서비스는 "직접 입력"을 고르고 그 서비스 개발자 문서의 OpenAI 호환 주소·키·모델 이름을 넣습니다(공식 주소가 아니면 보내기 전에 한 번 더 묻습니다).' }),
+        h('p', { class: 'src' }, ['출처: OpenAI 도움말 ', a('https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key', 'API 키 찾기'), ' · ', a('https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety', 'API 키 안전 수칙'), ' · ', a('https://developers.openai.com/api/docs/quickstart', '개발자 빠른 시작'), ' (2026-10-27 확인. 버튼 이름은 화면 개편으로 바뀔 수 있음)']),
+      ]),
+    ]),
+    h('section', { class: 'key-keep' }, [
+      h('h4', { text: '발급받은 키는 따로 보관하세요' }),
+      h('ul', {}, [
+        li('팩트챗·OpenAI 모두 키 전체를 ', b('만들 때 한 번만'), ' 보여 줍니다. 발급 창을 닫기 전에 복사해 두세요.'),
+        li('이 웹 도구는 키를 저장하지 않으므로(새로고침하면 사라짐), 쓸 때마다 보관한 곳에서 꺼내 붙여 넣습니다.'),
+        li(b('보관 장소'), ': 비밀번호 관리자 프로그램의 보안 메모(예: Bitwarden, 1Password)가 가장 좋습니다. 어렵다면 개인 PC 안의 암호를 건 파일에 둡니다. 키 이름·만든 날·어디에 썼는지를 함께 적어 두면 관리하기 쉽습니다.'),
+        li(b('두면 안 되는 곳'), ': 행사 정보 입력 칸·conference.json·GitHub 저장소, 학과 공유 폴더, 이메일·메신저(나에게 보내기 포함), 화면 캡처, 모니터에 붙인 메모지.'),
+        li(b('잃어버리면'), ': 다시 볼 수 없으니 발급한 곳에서 그 키를 삭제하고 새로 발급합니다.'),
+      ]),
+    ]),
+  ]);
 }
 function usageText(u) {
   if (!u) return '';

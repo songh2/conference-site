@@ -114,6 +114,16 @@ textarea.f-input { resize: vertical; }
 .key-warn { background: var(--warn-soft); border: 1px solid #f0d58a; border-radius: 8px; padding: 10px 14px; margin: 8px 0 12px; font-size: 13.5px; color: #4a3500; }
 .key-warn ul { margin: 6px 0 0; padding-left: 18px; }
 .key-warn li { margin: 3px 0; }
+.key-guide { border: 1px solid var(--line, #d8dce3); border-radius: 8px; padding: 0 14px; margin: 0 0 12px; background: #fff; font-size: 13.5px; }
+.key-guide > summary { cursor: pointer; padding: 9px 0; font-weight: 600; }
+.key-guide[open] > summary { border-bottom: 1px solid var(--line, #d8dce3); margin-bottom: 8px; }
+.key-guide .key-who { display: grid; gap: 4px; background: var(--soft); border-radius: 6px; padding: 8px 10px; margin: 0 0 6px; }
+.key-guide code { font-size: 12px; overflow-wrap: anywhere; }
+.key-guide h4 { margin: 6px 0 4px; font-size: 14px; }
+.key-guide ol, .key-guide ul { margin: 4px 0 6px; padding-left: 20px; }
+.key-guide li { margin: 3px 0; }
+.key-guide .src { font-size: 12px; color: var(--muted); margin: 4px 0 8px; }
+.key-guide .key-keep { border-top: 1px dashed var(--line, #d8dce3); margin-top: 6px; padding: 4px 0 8px; }
 .key-row { display: flex; gap: 6px; align-items: center; margin-top: 3px; }
 .key-row .f-input { flex: 1; margin-top: 0 !important; font-family: ui-monospace, Menlo, Consolas, monospace; }
 .key-shape.ok { color: var(--ok); }

@@ -5,26 +5,29 @@ import { writeTemp, call } from './engine.js';
 export const PROVIDERS = {
   factchat: {
     name: '팩트챗 (서울대 구성원)',
-    base: 'https://factchat-cloud.mindlogic.ai/v1/gateway',
+    group: '서울대 구성원',
+    base: 'https://api.baze.co/v1/gateway', // 서울대 개발자 문서(docs.factchat.kr/docs/snu) 기준, 2026-10-27 확인
     model: 'claude-sonnet-5',
     slash: true, // 이 게이트웨이의 주소는 끝에 / 가 붙는다
-    keyHelp: '팩트챗(마인드로직) API 게이트웨이에서 만든 키. 사용량은 키를 만든 계정의 크레딧에서 차감됩니다.',
+    keyHelp: '서울대 팩트챗의 API Gateway 에서 만든 키. 사용료는 키를 만든 계정의 크레딧에서 차감됩니다.',
     modelHelp: 'Claude 계열(claude-…)은 포스터 같은 그림도 읽습니다. 다른 모델은 이 주소에서 글자만 읽으므로, 글자가 들어 있는 PDF·한글·워드 파일에 쓰세요.',
   },
   openai: {
-    name: 'OpenAI',
+    name: 'OpenAI (개인 계정)',
+    group: '개인적으로 쓰는 LLM 서비스',
     base: 'https://api.openai.com/v1',
     model: 'gpt-6-luna',
     slash: false,
-    keyHelp: 'OpenAI API 키(sk-…). ChatGPT 요금제와 API 요금은 따로 계산될 수 있습니다.',
+    keyHelp: '본인이 OpenAI 개발자 플랫폼(platform.openai.com)에서 만든 키. 사용료는 본인 계정에서 나갑니다. ChatGPT 요금제와 API 요금은 따로 계산될 수 있습니다.',
     modelHelp: '모델 이름은 바뀔 수 있습니다. "모델 목록 불러오기"로 확인하세요.',
   },
   custom: {
-    name: '직접 입력 (OpenAI 호환 주소)',
+    name: '직접 입력 (다른 서비스, OpenAI 호환 주소)',
+    group: '개인적으로 쓰는 LLM 서비스',
     base: '',
     model: '',
     slash: false,
-    keyHelp: '해당 서비스에서 받은 키',
+    keyHelp: '본인이 쓰는 그 서비스에서 받은 키. 주소·모델 이름은 그 서비스의 개발자 문서를 확인하세요.',
     modelHelp: '그 서비스의 모델 이름',
   },
 };
@@ -34,7 +37,8 @@ const KKEY = 'conf-builder:aikey';
 // 키는 기본적으로 이 화면(메모리)에만 둔다. 새로고침하면 사라진다.
 // "키 기억"을 켰을 때만 이 브라우저의 localStorage 에 남긴다(같은 주소의 다른 페이지도 읽을 수 있어 권장하지 않음).
 let memoryKey = '';
-export const OFFICIAL_HOSTS = ['factchat-cloud.mindlogic.ai', 'api.openai.com'];
+export const OFFICIAL_HOSTS = ['api.baze.co', 'factchat-cloud.mindlogic.ai', 'api.openai.com'];
+const OLD_FACTCHAT_BASE = 'https://factchat-cloud.mindlogic.ai/v1/gateway'; // 예전 판의 기본값 → 서울대 주소로 바꿔 준다
 
 export function loadSettings() {
   let s = {};
@@ -42,6 +46,7 @@ export function loadSettings() {
   s.provider = PROVIDERS[s.provider] ? s.provider : 'factchat';
   const p = PROVIDERS[s.provider];
   s.base = s.base || p.base;
+  if (s.provider === 'factchat' && s.base.replace(/\/+$/, '') === OLD_FACTCHAT_BASE) s.base = p.base;
   s.model = s.model || p.model;
   s.remember = !!s.remember;
   let stored = '';
