@@ -186,6 +186,65 @@ def opendesign_brief(data_json):
     return json.dumps({"md": path.read_text(encoding="utf-8"), "theme": theme}, ensure_ascii=False)
 
 
+def _resolved_theme(data):
+    """conference.json 의 theme(프리셋 id·변수 객체·조합) → (id, 프리셋 정보 비슷한 사전, 최종 변수)."""
+    presets = T.load_presets()
+    th = data.get("theme")
+    final, _e, _w = T.resolve_theme(th, presets)
+    if isinstance(th, str) and th in presets and not _e:
+        return th, presets[th], final
+    base = th.get("preset") if isinstance(th, dict) else None
+    pid = (base or "default") + ("-custom" if isinstance(th, dict) and len(th) > (1 if base else 0) else "")
+    p = {"name": {"ko": "이 행사 맞춤 배색", "en": "Custom event palette"}, "status": "draft",
+         "source": f"conference.json 의 theme 값 (프리셋 {base or 'default'} + 사용자·AI 지정 변수)", "note": {}, "vars": final}
+    if base in presets and len(th) == 1:
+        p = presets[base]
+    return pid, p, final
+
+
+def opendesign_context(data_json, size, lang):
+    """AI 디자인 시안용 자료: 사실 브리프, 이 행사 배색의 DESIGN.md·tokens.css(OpenDesign 형식), QR, 쓸 수 있는 사진 자리."""
+    data = _loads(data_json)
+    data.setdefault("poster", {})
+    if not isinstance(data["poster"], dict):
+        data["poster"] = {}
+    if size:
+        data["poster"]["size"] = size
+    if lang:
+        data["poster"]["lang"] = lang
+    site = _site(data, "od")
+    path, _theme = EOD.brief(site, out_dir=WORK / "od-brief")
+    pid, p, final = _resolved_theme(data)
+    v = EOD.full_vars(final)
+    url = data["poster"].get("url") or data.get("site_url") or ""
+    warnings = []
+    qr = MP.qr_svg(url, warnings) if url else ""
+    slots = []
+    def add(slot, ref, label):
+        if isinstance(ref, str) and ref.startswith("assets/") and (ASSETS / ref[len("assets/"):]).is_file() \
+                and ref.lower().rsplit(".", 1)[-1] in ("png", "jpg", "jpeg", "webp", "gif", "svg"):
+            slots.append({"slot": slot, "ref": ref, "label": label})
+    add("hero", data["poster"].get("image") or (data.get("hero") or {}).get("image"), "대표 사진")
+    add("logo", (data.get("logo") or {}).get("src") if isinstance(data.get("logo"), dict) else None, "로고(주최 측 제공)")
+    for s in data.get("speakers") or []:
+        if isinstance(s, dict) and s.get("id"):
+            add("speaker:" + s["id"], s.get("photo"), "연사 사진: " + EOD.both(s.get("name")))
+    for i, sp in enumerate(data.get("sponsors") or []):
+        if isinstance(sp, dict):
+            add(f"sponsor:{i}", sp.get("logo"), "후원 로고: " + EOD.both(sp.get("name")))
+    w, h = MP.PAPER.get((size or "A2").upper(), MP.PAPER["A2"])
+    return json.dumps({"brief": path.read_text(encoding="utf-8"), "design_md": EOD.design_md(pid, p, v),
+                       "tokens_css": EOD.tokens_css(pid, p["name"].get("en", pid), v), "vars": v,
+                       "qr": qr, "url": url, "slots": slots, "paper_mm": [w, h]}, ensure_ascii=False)
+
+
+def theme_contrast(theme_json):
+    """적용하려는 theme 값(프리셋 id·변수 객체) → {"errors": [...], "issues": [[설명, 대비, 기준], ...]}.
+    build.py 가 쓰는 것과 같은 검사(themes.resolve_theme·contrast_issues)."""
+    final, errors, _w = T.resolve_theme(json.loads(theme_json))
+    return json.dumps({"errors": errors, "issues": [list(x) for x in T.contrast_issues(final)]}, ensure_ascii=False)
+
+
 def themes_list():
     """테마 선택 화면용: id, 이름, 상태, 대표 색."""
     out = []

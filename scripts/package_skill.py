@@ -28,7 +28,8 @@ def main():
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
         for p in sorted(ROOT.rglob("*")):
             rel = p.relative_to(ROOT)
-            if any(part in EXCLUDE_DIRS for part in rel.parts) or rel.parts[0] in EXCLUDE_TOP:
+            keep = rel.parts[:2] == ("web", "opendesign")  # AI 디자인 규칙(OpenDesign craft, Apache-2.0)은 스킬에도 넣는다
+            if any(part in EXCLUDE_DIRS for part in rel.parts) or (rel.parts[0] in EXCLUDE_TOP and not keep):
                 continue
             if p.is_dir() or p.suffix in EXCLUDE_SUFFIX:
                 continue

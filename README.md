@@ -20,7 +20,7 @@
 | 테마 | `"theme": "snu-science"` 처럼 한 줄로 배색 변경. **서울대학교 공통 + 16개 단과대학·학부 프리셋** 과 범용 5종. 공개 후 주소에 `?theme=<id>` 를 붙여 미리보기 |
 | 인쇄 | 메뉴·버튼 제외, 일정·초록·위원·명단이 문서로 출력 |
 | **포스터** | 같은 `conference.json` 으로 **A1~A4 인쇄용 포스터(PDF·PNG)**. 일정표형·연사형·강연형·사진형, 테마 배색, QR 코드, 글자 크기 자동 맞춤. **홈페이지 주소만으로 샘플(시안) 포스터**(덜 채워진 홈페이지도 가능, 빈 칸은 "미정") → `docs/poster.md` |
-| OpenDesign 연계 | 행사 정보 브리프와 테마를 [OpenDesign](https://github.com/nexu-io/open-design) 디자인 시스템 형식으로 내보내 AI 로 포스터 시안 다듬기 → `docs/open-design.md` |
+| OpenDesign 연계 | **웹 도구 안에서** OpenDesign 디자인 규칙 + 이 행사의 디자인 시스템으로 AI 포스터 시안 만들기·고치기, 홈페이지 배색·첫 화면 그림 제안(본인 API 키 — 서울대는 팩트챗 크레딧). 브리프·디자인 시스템을 [OpenDesign](https://github.com/nexu-io/open-design) 앱으로 내보내기도 가능 → `docs/open-design.md` |
 | 유지 | 행사 후 발표자료·사진·포스터 추가 → 증빙 자료 주소로 보존. 종료 표시 자동 |
 
 예시 사이트: `sites/example-2027/` (모든 인물·기관은 가상). 빌드하면 `sites/example-2027/index.html` 을 더블클릭해 볼 수 있습니다.

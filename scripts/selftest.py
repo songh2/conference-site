@@ -105,8 +105,10 @@ def main():
         import zipfile
         with zipfile.ZipFile(zip_path) as z:
             names = z.namelist()
-        ok(r.returncode == 0 and any(n.endswith("/SKILL.md") for n in names) and not any("/dist/" in n or "/web/" in n or n.endswith(".whl") for n in names),
-           f"스킬 ZIP 생성 ({len(names)}개 파일, dist·웹 도구 제외)")
+        web = [n for n in names if "/web/" in n]
+        ok(r.returncode == 0 and any(n.endswith("/SKILL.md") for n in names) and not any("/dist/" in n or n.endswith(".whl") for n in names)
+           and web and all("/web/opendesign/" in n for n in web),
+           f"스킬 ZIP 생성 ({len(names)}개 파일, dist·웹 도구 제외 — AI 디자인 규칙 web/opendesign/ 만 포함)")
 
         # 5. 공개 저장소 점검
         sites = [p.name for p in (ROOT / "sites").iterdir() if p.is_dir()]
@@ -212,6 +214,17 @@ def main():
         pst = json.loads(bridge.poster(ex_json, "program", "A2", "both", ""))
         ok(pst["info"]["layout"] == "program" and "@page" in pst["html"], "웹 도구 포스터 생성")
         ok(len(json.loads(bridge.themes_list())) == len(presets), "웹 도구 테마 목록 = 프리셋 수")
+        odc = json.loads(bridge.opendesign_context(json.dumps(data), "A3", "ko"))
+        ok(odc["paper_mm"] == [297, 420] and "사실 정보" in odc["brief"] and odc["design_md"].startswith("# ") and "--accent:" in odc["tokens_css"]
+           and (odc["qr"].startswith("<svg") or not odc["url"]), "웹 도구 AI 디자인 자료: 브리프·DESIGN.md·tokens.css·QR·용지 크기")
+        tc = json.loads(bridge.theme_contrast(json.dumps({"preset": "default", "--primary": "#dddddd"})))
+        tb = json.loads(bridge.theme_contrast(json.dumps({"--primary": "red;}"})))
+        ok(any("--primary" in x[0] for x in tc["issues"]) and not tc["errors"] and tb["errors"], "웹 도구 AI 배색 검사: 대비 부족·허용 안 되는 값 잡아냄")
+        craft = ROOT / "web" / "opendesign"
+        ok(all((craft / "craft" / f"{n}.md").is_file() for n in ("typography", "typography-hierarchy", "color", "anti-ai-slop"))
+           and (craft / "LICENSE-Apache-2.0.txt").read_text(encoding="utf-8").lstrip().startswith("Apache License")
+           and "nexu-io/open-design" in (craft / "README.md").read_text(encoding="utf-8"),
+           "웹 도구 AI 디자인 규칙(OpenDesign craft) 파일·라이선스·출처 표기")
         hw = tmp / "t.hwpx"
         with zipfile.ZipFile(hw, "w") as z:
             z.writestr("Contents/section0.xml", '<hs:sec><hp:p id="1"><hp:run><hp:t>행사명: 시험 &amp; 학회</hp:t></hp:run></hp:p><hp:p id="2"><hp:run><hp:t>일시: 2027-02-11</hp:t></hp:run></hp:p></hs:sec>')

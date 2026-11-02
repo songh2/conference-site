@@ -3,6 +3,7 @@ import { TABS } from './fields.js';
 import { renderFields, getPath, h } from './form.js';
 import * as E from './engine.js';
 import * as AI from './ai.js';
+import * as D from './design.js';
 
 const DRAFT_KEY = 'conf-builder:draft';
 const REPO = 'https://github.com/songh2/conference-site';
@@ -122,6 +123,7 @@ function renderTab() {
   panel.appendChild(h('h2', { class: 'panel-title', text: tab.title }));
   if (tab.id === 'poster') panel.appendChild(urlBox('poster')); // 홈페이지 주소로 샘플 포스터 — 탭 맨 위
   if (tab.fields) { const box = h('div', { class: 'form' }); renderFields(box, tab.fields, ctx()); panel.appendChild(box); }
+  if (tab.id === 'design') panel.appendChild(aiThemeBox()); // AI 배색·첫 화면 그림 제안
   if (tab.custom && CUSTOM[tab.custom]) panel.appendChild(CUSTOM[tab.custom]());
   const i = TABS.indexOf(tab);
   const navRow = h('div', { class: 'step-nav' });
@@ -359,6 +361,220 @@ function urlBox(where) {
   ]);
 }
 
+// ---------------------------------------------------------------- AI 디자인 (OpenDesign 방식, 사용자 키·크레딧 사용)
+function aiKeyInfo() {
+  const s = AI.loadSettings();
+  if (!s.key) return h('div', { class: 'msg warn', text: '먼저 "시작하기" 탭의 AI 칸에 API 키(서울대 구성원은 팩트챗에서 발급)를 넣어 주세요. 키는 새로고침하면 다시 넣어야 합니다.' });
+  return h('div', { class: 'f-help', text: `쓰는 AI: ${(AI.PROVIDERS[s.provider] || {}).name || s.provider} · 모델 ${s.model} (모델은 "시작하기" 탭에서 바꿉니다. 더 정교한 결과는 claude-opus 계열 — 크레딧이 더 듭니다)` });
+}
+function aiReady() {
+  const s = AI.loadSettings();
+  if (!s.key) { toast('먼저 "시작하기" 탭의 AI 칸에 API 키를 넣어 주세요.', 'bad'); return null; }
+  if (!guardBase(s)) return null;
+  return s;
+}
+function b64(bytes) {
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) out += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(out);
+}
+function assetDataUrl(ref) {
+  const a = E.assets.get(ref);
+  if (!a) return '';
+  const type = a.type || ({ svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif' }[ref.split('.').pop().toLowerCase()] || 'application/octet-stream');
+  return `data:${type};base64,${b64(a.bytes)}`;
+}
+function requiredFacts(d) {
+  const first = (o) => (tl(o) || '').split('\n')[0].trim();
+  const v = d.venue || {};
+  return [{ label: '행사명', value: first(d.title) }, { label: '장소', value: first(v.name) }, { label: '일시', value: (d.dates || {}).start || '', kind: 'date' }];
+}
+function selectEl(opts, v, cls) { const s = h('select', { class: 'f-input ' + (cls || 'f-short') }, opts.map(([a, b]) => h('option', { value: a, text: b }))); s.value = v; return s; }
+
+function aiPosterBox() {
+  const key = (state.data.slug || '') + '|' + tl(state.data.title);
+  if (!state.aiPoster || state.aiPoster.key !== key) state.aiPoster = { key, versions: [], cur: -1 };
+  const st = state.aiPoster;
+  const p = state.data.poster || {};
+  const box = h('div', { class: 'box ai-design', id: 'ai-poster' });
+  box.append(
+    h('h3', { text: 'AI 디자인 시안 (OpenDesign 방식 · 크레딧 사용)' }),
+    h('p', { class: 'f-help', text: '위 기본 포스터가 마음에 들지 않을 때 씁니다. AI 가 OpenDesign 의 디자인 규칙(글자·색·"AI 티" 금지)과 이 행사의 디자인 시스템(배색·글꼴)을 받아 새 시안을 그립니다. 글은 행사 정보에 있는 것만 쓰게 하고, 자료에 없는 글이 보이면 경고합니다. 누를 때마다 크레딧이 들고 보통 1~3분 걸립니다.' }),
+    aiKeyInfo(),
+  );
+  const style = selectEl(D.STYLES.map((x) => [x.id, x.name]), 'auto', 'f-input');
+  const size = selectEl([['A2', 'A2'], ['A1', 'A1'], ['A3', 'A3'], ['A4', 'A4']], (p.size || 'A2').toUpperCase());
+  const lang = selectEl([['both', '한국어 + 영어'], ['ko', '한국어'], ['en', 'English']], p.lang || 'both');
+  const extra = h('textarea', { class: 'f-input', rows: 2, placeholder: '추가 요청 (선택) 예: 제목을 아주 크게, 밝은 바탕, 정수론 느낌의 격자 무늬, 프로그램 표는 두 단' });
+  const status = h('div', { class: 'ai-status' });
+  const out = h('div', { class: 'ai-design-out' });
+  const feedback = h('textarea', { class: 'f-input', rows: 2, placeholder: '이렇게 바꿔 주세요. 예: 제목 글씨를 더 크게, 배경을 더 밝게, 연사 이름이 잘 보이게, 무늬를 줄여 줘' });
+  const buttons = [];
+  const run = async (mode) => {
+    const s = aiReady(); if (!s) return;
+    if (mode === 'revise' && !feedback.value.trim()) return toast('어떻게 바꿀지 적어 주세요.', 'bad');
+    buttons.forEach((b) => { b.disabled = true; });
+    const t0 = Date.now();
+    try {
+      const prev = st.versions[st.cur];
+      const sz = mode === 'revise' ? prev.size : size.value;
+      const lg = mode === 'revise' ? prev.lang : lang.value;
+      status.textContent = '디자인 자료(브리프·디자인 시스템·규칙) 준비 중…';
+      const ctx = await E.callJson('opendesign_context', JSON.stringify(state.data), sz, lg);
+      const craft = await D.loadCraft();
+      const system = D.posterSystem({ craft, paper: ctx.paper_mm, size: sz, lang: lg, qr: !!ctx.qr, slots: ctx.slots });
+      let base, messages, label;
+      if (mode === 'revise') {
+        base = prev.base;
+        messages = [{ role: 'user', text: base }, { role: 'assistant', text: `<artifact type="text/html">\n${prev.raw}\n</artifact>` }, { role: 'user', text: D.reviseMessage(feedback.value.trim()) }];
+        label = `시안 ${st.cur + 1} 수정: ${feedback.value.trim()}`;
+      } else {
+        base = D.posterFirstMessage({ ctx, style: style.value, extra: extra.value.trim(), variant: mode === 'again' ? st.versions.length + 1 : 0 });
+        messages = [{ role: 'user', text: base }];
+        label = (D.STYLES.find((x) => x.id === style.value) || D.STYLES[0]).name.split(' — ')[0] + (extra.value.trim() ? ` · ${extra.value.trim()}` : '');
+      }
+      status.textContent = 'AI 가 시안을 그리는 중… (보통 1~3분, 크레딧 사용)';
+      const r = await AI.chat(s, system, messages, { maxTokens: 16000 });
+      const { html: raw, note } = D.extractArtifact(r.text);
+      const slotUrls = {};
+      for (const sl of ctx.slots) slotUrls[sl.slot] = assetDataUrl(sl.ref);
+      const html = D.finishPoster(raw, { paper: ctx.paper_mm, qr: ctx.qr, slotUrls });
+      const fc = D.factCheck(html, ctx.brief + '\n' + ctx.url, requiredFacts(state.data));
+      st.versions.push({ raw, html, note, usage: r.usage, secs: Math.round((Date.now() - t0) / 1000), fc, base, label, paper: ctx.paper_mm, size: sz, lang: lg });
+      st.cur = st.versions.length - 1;
+      if (mode === 'revise') feedback.value = '';
+      status.textContent = '';
+      renderOut();
+      out.scrollIntoView({ block: 'start' });
+    } catch (e) {
+      status.textContent = '';
+      toast('AI 시안을 만들지 못했습니다: ' + e.message, 'bad');
+    } finally { buttons.forEach((b) => { b.disabled = false; }); }
+  };
+  const mk = (text, mode, cls) => { const b = h('button', { type: 'button', class: cls || 'btn', text, onclick: () => run(mode) }); buttons.push(b); return b; };
+  function renderOut() {
+    out.innerHTML = '';
+    if (!st.versions.length) return;
+    const v = st.versions[st.cur];
+    const tabs = h('div', { class: 'ver-tabs' }, st.versions.map((x, i) => h('button', { type: 'button', class: 'btn-sm' + (i === st.cur ? '' : ' ghost'), text: `시안 ${i + 1}`, title: x.label, onclick: () => { st.cur = i; renderOut(); } })));
+    const { pw, ph, k } = D.previewScale(v.paper, Math.min(out.clientWidth || 520, 560));
+    const fr = h('iframe', { class: 'ai-poster-frame', title: 'AI 디자인 시안 미리보기', sandbox: '', style: `width:${Math.round(pw)}px;height:${Math.round(ph)}px;transform:scale(${k});` });
+    fr.srcdoc = v.html;
+    out.append(...[
+      tabs,
+      h('div', { class: 'f-help', text: `${v.label} · ${v.size} · ${v.secs}초` + usageText(v.usage) }),
+      v.note ? h('p', { class: 'f-help', text: 'AI 설명: ' + v.note }) : null,
+      v.fc.missing.length ? h('div', { class: 'msg bad', text: '시안에 빠진 필수 정보: ' + v.fc.missing.join(', ') + ' — "이렇게 바꿔 주세요"에 넣어 달라고 요청하세요.' }) : null,
+      v.fc.unknown.length ? h('div', { class: 'msg warn' }, [h('b', { text: '행사 정보에서 찾지 못한 글 — 원문과 대조하세요: ' }), v.fc.unknown.map((x) => `"${x}"`).join(', ')]) : null,
+      h('div', { class: 'f-help', text: 'AI 시안은 인쇄 전에 일시·장소·이름을 원문과 한 줄씩 대조하세요. 새로고침하면 시안이 사라지니 마음에 드는 것은 "HTML 파일로 받기"로 보관하세요.' }),
+      h('div', { class: 'ai-frame-wrap', style: `width:${Math.round(pw * k)}px;height:${Math.round(ph * k)}px;` }, [fr]),
+      h('div', { class: 'row' }, [
+        h('button', { type: 'button', class: 'btn-sm', text: '새 창에서 열기 (인쇄·PDF 저장)', onclick: () => window.open(URL.createObjectURL(new Blob([v.html], { type: 'text/html' })), '_blank', 'noopener') }),
+        h('button', { type: 'button', class: 'btn-sm ghost', text: 'HTML 파일로 받기', onclick: () => save(v.html, `poster-ai-${st.cur + 1}-${v.size}.html`, 'text/html') }),
+      ]),
+      h('label', { class: 'f-label' }, ['이 시안을 고치기', feedback]),
+      h('div', { class: 'row' }, [mk('이 시안을 고쳐 달라고 하기', 'revise'), mk('같은 방향으로 다른 시안', 'again', 'btn ghost')]),
+    ].filter(Boolean));
+  }
+  box.append(
+    h('div', { class: 'grid2' }, [h('label', { class: 'f-label' }, ['디자인 방향', style]), h('div', { class: 'row' }, [h('label', {}, ['크기 ', size]), h('label', {}, ['언어 ', lang])])]),
+    h('label', { class: 'f-label' }, ['추가 요청', extra]),
+    h('div', { class: 'row' }, [mk('AI 시안 만들기', 'new')]),
+    status, out,
+  );
+  setTimeout(renderOut, 0);
+  return box;
+}
+
+function buildTheme(cur, vars) {
+  if (typeof cur === 'string' && cur) return { preset: cur, ...vars };
+  if (cur && typeof cur === 'object') return { ...cur, ...vars };
+  return { ...vars };
+}
+function aiThemeBox() {
+  const box = h('div', { class: 'box ai-design', id: 'ai-theme' });
+  const hero = (state.data.hero || {}).image || '';
+  const useHero = h('input', { type: 'checkbox', id: 'ai-theme-hero' });
+  useHero.checked = !hero || hero.startsWith('assets/hero-ai');
+  const style = selectEl(D.STYLES.map((x) => [x.id, x.name]), 'auto', 'f-input');
+  const extra = h('textarea', { class: 'f-input', rows: 2, placeholder: '추가 요청 (선택) 예: 자연과학대학 색은 유지하면서 더 산뜻하게, 따뜻한 느낌, 정수론 느낌의 격자 무늬' });
+  const status = h('div', { class: 'ai-status' });
+  const out = h('div');
+  const btn = h('button', { type: 'button', class: 'btn', text: 'AI 제안 받기' });
+  btn.addEventListener('click', async () => {
+    const s = aiReady(); if (!s) return;
+    btn.disabled = true; out.innerHTML = '';
+    const t0 = Date.now();
+    try {
+      status.textContent = '지금 배색 확인 중…';
+      const ctx = await E.callJson('opendesign_context', JSON.stringify(state.data), '', '');
+      const craft = await D.loadCraft();
+      const cur = {}; D.THEME_KEYS.forEach((k) => { if (ctx.vars[k]) cur[k] = ctx.vars[k]; });
+      const th = state.data.theme;
+      const presetName = typeof th === 'string' ? th : (th && th.preset) || 'default';
+      status.textContent = 'AI 가 배색과 첫 화면 그림을 고르는 중… (보통 30초~2분, 크레딧 사용)';
+      const r = await AI.chat(s, D.themeSystem({ craft }), [{ role: 'user', text: D.themeMessage({ title: tl(state.data.title), host: tl(state.data.host), current: cur, presetName, style: style.value, extra: extra.value.trim() }) }], { maxTokens: 8000, json: true });
+      const prop = D.parseThemeProposal(r.text);
+      const next = buildTheme(state.data.theme, prop.vars);
+      const chk = await E.callJson('theme_contrast', JSON.stringify(next));
+      status.textContent = '';
+      const merged = { ...ctx.vars, ...prop.vars };
+      const svgUrl = prop.svg ? 'data:image/svg+xml;base64,' + b64(new TextEncoder().encode(prop.svg)) : '';
+      const mock = h('div', { class: 'hero-mock', style: `background:linear-gradient(135deg, ${merged['--primary-deep']} 0%, ${merged['--primary']} 55%, ${merged['--hero-end']} 100%);` }, [
+        svgUrl && useHero.checked ? h('img', { src: svgUrl, alt: '' }) : null,
+        h('div', { class: 'shade' }),
+        h('div', { class: 'txt', style: `font-family:${merged['--font-head'] || ''}` }, [h('b', { text: tl(state.data.title) || '행사명' }), h('span', { class: 'cta', style: `background:${merged['--accent']};color:${merged['--accent-ink']}`, text: '사전등록' })]),
+      ]);
+      out.append(h('div', { class: 'box ok-box' }, [
+        h('h4', { text: `AI 제안: ${prop.name}` }),
+        prop.summary ? h('p', { text: prop.summary }) : null,
+        h('div', { class: 'f-help', text: `${Math.round((Date.now() - t0) / 1000)}초` + usageText(r.usage) + (prop.dropped.length ? ` · 쓰지 않은 값: ${prop.dropped.join(', ')}` : '') + (prop.svg ? '' : ' · 첫 화면 그림은 받지 못했거나 안전 검사에서 빠졌습니다') }),
+        mock,
+        h('div', { class: 'swatches' }, Object.entries(prop.vars).filter(([k]) => /^#/.test(prop.vars[k])).map(([k, v]) => h('span', { class: 'sw', title: k }, [h('i', { style: `background:${v}` }), `${k.replace('--', '')} ${v}`]))),
+        ...chk.errors.map((x) => h('div', { class: 'msg bad', text: x })),
+        ...chk.issues.map(([lab, c, need]) => h('div', { class: 'msg warn', text: `글자 대비 부족: ${lab} — ${c}:1 (기준 ${need}:1). 적용해도 되지만 읽기 어려울 수 있습니다. 다시 제안 받거나 "추가 요청"에 "글자가 잘 보이게"를 적어 보세요.` })),
+        h('div', { class: 'row' }, [
+          h('button', {
+            type: 'button', class: 'btn', text: '적용하기', disabled: chk.errors.length ? true : null,
+            onclick: async () => {
+              state.themeUndo = { theme: JSON.parse(JSON.stringify(state.data.theme ?? '')), heroImage: (state.data.hero || {}).image || '' };
+              const d = state.data;
+              d.theme = next;
+              if (useHero.checked && prop.svg) {
+                await E.putAsset('assets/hero-ai.svg', new TextEncoder().encode(prop.svg), 'image/svg+xml');
+                d.hero = Object.assign({}, d.hero, { image: 'assets/hero-ai.svg' });
+              }
+              setData(d, 'AI 가 제안한 배색' + (useHero.checked && prop.svg ? '과 첫 화면 그림' : '') + '을 적용했습니다. 오른쪽 미리보기를 확인하고, 마음에 들지 않으면 "되돌리기"를 누르세요.');
+            },
+          }),
+          h('button', { type: 'button', class: 'btn ghost', text: '버리기', onclick: () => { out.innerHTML = ''; } }),
+        ]),
+      ]));
+    } catch (e) { status.textContent = ''; toast('AI 제안을 받지 못했습니다: ' + e.message, 'bad'); }
+    finally { btn.disabled = false; }
+  });
+  box.append(...[
+    h('h3', { text: 'AI 배색·첫 화면 그림 제안 (OpenDesign 방식 · 크레딧 사용)' }),
+    h('p', { class: 'f-help', text: '원하는 분위기를 고르면 AI 가 OpenDesign 의 색·글자 규칙에 맞춰 홈페이지 배색(12가지 색), 제목 글꼴(명조/고딕), 모서리 둥글기, 첫 화면 배경 그림을 제안합니다. 적용 전에 미리 보여 주고 글자 대비를 검사합니다. 적용한 배색은 포스터(기본·AI 시안)에도 그대로 쓰입니다. 등록 양식·한영 전환 같은 기능은 바뀌지 않습니다.' }),
+    aiKeyInfo(),
+    h('label', { class: 'f-label' }, ['분위기', style]),
+    h('label', { class: 'f-label' }, ['추가 요청', extra]),
+    h('div', { class: 'row' }, [h('span', { class: 'chip' }, [useHero, h('label', { for: 'ai-theme-hero', text: hero && !hero.startsWith('assets/hero-ai') ? '첫 화면 사진을 AI 그림으로 바꾸기 (지금 사진이 있음)' : '첫 화면 배경 그림도 바꾸기' })]), btn]),
+    state.themeUndo ? h('div', { class: 'row' }, [h('button', {
+      type: 'button', class: 'btn-sm ghost', text: '되돌리기 (AI 적용 전 배색·그림으로)',
+      onclick: () => {
+        const u = state.themeUndo; const d = state.data;
+        if (u.theme === '' || u.theme == null) delete d.theme; else d.theme = u.theme;
+        d.hero = Object.assign({}, d.hero, { image: u.heroImage });
+        state.themeUndo = null;
+        setData(d, 'AI 적용 전으로 되돌렸습니다.');
+      },
+    })]) : null,
+    status, out,
+  ].filter(Boolean));
+  return box;
+}
+
 // ---------------------------------------------------------------- 탭별 화면
 const CUSTOM = {
   start() {
@@ -478,6 +694,7 @@ const CUSTOM = {
       }),
     ]));
     box.appendChild(out);
+    wrap.appendChild(aiPosterBox()); // AI 디자인 시안 (OpenDesign 방식)
     if (state.posterAuto) { state.posterAuto = false; scrollAfter = true; setTimeout(() => makeBtn.click(), 0); }
     return wrap;
   },

@@ -287,6 +287,35 @@ export async function extract(s, system, parts, extra) {
   return { text: out, usage: res.usage || null, dropped, format: fmt };
 }
 
+// 여러 차례 주고받는 대화(디자인 시안 → 수정 요청). messages: [{ role: 'user'|'assistant', text }]
+export async function chat(s, system, messages, opts) {
+  const o = opts || {};
+  if (!s.key) throw new Error('API 키를 넣어 주세요 ("시작하기" 탭의 AI 칸).');
+  if (!s.model) throw new Error('모델 이름을 넣어 주세요 ("시작하기" 탭의 AI 칸).');
+  const st = baseStatus(s.base); if (!st.ok) throw new Error(st.reason);
+  const fmt = apiFormat(s);
+  let body, url, headers;
+  if (fmt === 'anthropic') {
+    url = endpoint(s, '/claude/v1/messages');
+    headers = { 'x-api-key': s.key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' };
+    body = { model: s.model, max_tokens: o.maxTokens || 16000, system, messages: messages.map((m) => ({ role: m.role, content: m.text })) };
+  } else {
+    url = endpoint(s, '/chat/completions');
+    headers = { Authorization: 'Bearer ' + s.key, 'content-type': 'application/json' };
+    body = { model: s.model, messages: [{ role: 'system', content: system }].concat(messages.map((m) => ({ role: m.role, content: m.text }))) };
+    if (o.json && s.provider === 'openai') body.response_format = { type: 'json_object' };
+  }
+  const res = await fetchJson(url, { method: 'POST', headers, body: JSON.stringify(body) }, o.timeoutMs || 300000);
+  let out = '';
+  if (fmt === 'anthropic') out = (res.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('');
+  else {
+    const m = res.choices && res.choices[0] && res.choices[0].message;
+    out = m ? (typeof m.content === 'string' ? m.content : (m.content || []).map((c) => c.text || '').join('')) : '';
+  }
+  const stop = fmt === 'anthropic' ? res.stop_reason : (res.choices && res.choices[0] && res.choices[0].finish_reason);
+  return { text: out, usage: res.usage || null, truncated: stop === 'max_tokens' || stop === 'length', format: fmt };
+}
+
 export function parseJson(text) {
   let t = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
   const a = t.indexOf('{');
