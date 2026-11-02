@@ -238,6 +238,77 @@ def opendesign_context(data_json, size, lang):
                        "qr": qr, "url": url, "slots": slots, "paper_mm": [w, h]}, ensure_ascii=False)
 
 
+OD_BUNDLE_README = """OpenDesign 앱용 묶음 — {title}
+====================================================
+
+이 ZIP 은 conference-site 웹 도구(https://songh2.github.io/conference-site/)가 만든 것입니다.
+OpenDesign 앱(https://open-design.ai, 맥·윈도우)에서 이 행사 포스터를 만들 때 씁니다. 자세한 설명:
+https://github.com/songh2/conference-site/blob/main/open-design/README.md
+
+들어 있는 것
+- poster-brief.md        행사 사실 정보(이 글만 포스터에 씀) — 용지 {size}, 언어 {lang}
+- qr.svg                 홈페이지 QR 코드(진짜 코드, 있을 때만){qr_note}
+- assets/                포스터에 써도 되는 사진·로고(올린 것만, 있을 때만)
+- design-system/{ds_id}/  이 행사 배색의 디자인 시스템(OpenDesign 형식)
+- skill/conference-poster/SKILL.md   OpenDesign 용 포스터 스킬(인터넷 링크로 설치해도 됨)
+
+순서 (처음 한 번)
+1. 이 ZIP 을 풉니다(더블클릭).
+2. OpenDesign → 설정 → 디자인 시스템 추가 → 로컬 → 프로젝트 경로에 풀린 폴더 안의
+   design-system/{ds_id} 경로 → 프로젝트에서 가져오기.
+3. OpenDesign 의 플러그인 화면 → 플러그인 가져오기(추가) → Skill → URL 칸에:
+   https://github.com/songh2/conference-site/tree/main/open-design/skills/conference-poster
+   (링크가 안 되면 같은 창의 로컬 폴더 업로드로 skill/conference-poster 폴더를 올립니다)
+
+포스터 만들기
+4. 새 프로젝트 → 디자인 시스템 "{ds_name}" 선택 → poster-brief.md, qr.svg, (있으면) assets 사진을 첨부
+   → "conference-poster 스킬로 {size} 포스터를 만들어 줘. 브리프에 있는 사실만 써." 라고 요청.
+5. 결과를 브리프와 한 줄씩 대조한 뒤, 브라우저 인쇄 → PDF로 저장(여백 없음, 배경 그래픽 켜기).
+
+주의: 참가자 명단·연락처 같은 개인정보는 넣지 마세요. AI 사용료(팩트챗 크레딧 등)는 연결한 키의 계정에서 나갑니다.
+"""
+
+
+def opendesign_bundle(data_json, size, lang):
+    """OpenDesign 앱용 묶음(ZIP): 사실 브리프, QR, 쓸 수 있는 사진, 이 행사 배색의 디자인 시스템, 포스터 스킬, 안내문."""
+    data = _loads(data_json)
+    data.setdefault("poster", {})
+    if not isinstance(data["poster"], dict):
+        data["poster"] = {}
+    if size:
+        data["poster"]["size"] = size
+    if lang:
+        data["poster"]["lang"] = lang
+    ctx = json.loads(opendesign_context(json.dumps(data, ensure_ascii=False), size, lang))
+    pid, p, final = _resolved_theme(data)
+    if pid.endswith("-custom"):
+        pid = re.sub(r"[^a-z0-9-]+", "-", (data.get("slug") or "event").lower()).strip("-") + "-custom"
+    out = WORK / "od-bundle"
+    if out.exists():
+        shutil.rmtree(out)
+    d = EOD.export_theme(pid, p, out, stamp=False)
+    ds_id = d.name
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("poster-brief.md", ctx["brief"])
+        if ctx["qr"]:
+            z.writestr("qr.svg", '<?xml version="1.0" encoding="UTF-8"?>\n' + ctx["qr"] if not ctx["qr"].startswith("<?xml") else ctx["qr"])
+        for sl in ctx["slots"]:
+            src = ASSETS / sl["ref"][len("assets/"):]
+            if src.is_file():
+                z.write(src, sl["ref"])
+        for f in sorted(d.iterdir()):
+            z.write(f, f"design-system/{ds_id}/{f.name}")
+        skill = ROOT / "open-design" / "skills" / "conference-poster" / "SKILL.md"
+        if skill.is_file():
+            z.write(skill, "skill/conference-poster/SKILL.md")
+        z.writestr("README.txt", OD_BUNDLE_README.format(
+            title=_title(data), size=(size or "A2").upper(), lang={"ko": "한국어", "en": "English"}.get(lang, "한국어 + 영어"),
+            qr_note="" if ctx["qr"] else " — 홈페이지 주소(site_url)가 없어 이번 묶음에는 없음",
+            ds_id=ds_id, ds_name=json.loads((d / "manifest.json").read_text(encoding="utf-8"))["name"]))
+    return buf.getvalue()
+
+
 def theme_contrast(theme_json):
     """적용하려는 theme 값(프리셋 id·변수 객체) → {"errors": [...], "issues": [[설명, 대비, 기준], ...]}.
     build.py 가 쓰는 것과 같은 검사(themes.resolve_theme·contrast_issues)."""

@@ -57,7 +57,13 @@ python3 scripts/export_open_design.py --all-themes
 ### 포스터 브리프
 `poster-brief.md` 에는 용지 크기, 언어, 행사명·일시·장소·주최·등록 정보·홈페이지 주소, 프로그램 표, 연사 명단, 그리고 지켜야 할 규칙이 들어 있습니다. OpenDesign 이 아니어도 ChatGPT·Claude 의 이미지/디자인 기능이나 외부 디자이너에게 그대로 줄 수 있습니다.
 
-## 3. OpenDesign 에서 쓰기
+## 3. OpenDesign 앱에서 쓰기
+
+> **맥에서 설치하고 팩트챗 키로 연결하는 단계별 안내는 [`open-design/README.md`](../open-design/README.md)** 에 있습니다(2026-11-02).
+> 요약: ① 데스크톱 앱 설치(맥 Apple Silicon·Intel, 윈도우 x64) → ② 팩트챗 연결 — 권장은 Claude Code + 팩트챗(`~/.claude/settings.json` 의 env 항목) → ③ 웹 도구 포스터 탭의 **"OpenDesign 앱용 묶음 받기 (ZIP)"**(브리프·QR·사진·행사 배색·포스터 스킬) → ④ 디자인 시스템은 설정 → 디자인 시스템 추가 → 로컬, 포스터 스킬은 GitHub 링크로 설치 → ⑤ 새 프로젝트에서 브리프 첨부 후 요청.
+> 저장소의 `open-design/` 폴더에 디자인 시스템 22개와 OpenDesign 용 포스터 스킬(`open-design/skills/conference-poster`)을 넣어 두었습니다. OpenDesign 앱 자체는 컴퓨터에서 돌아가는 프로그램이라 GitHub Pages 에는 설치할 수 없습니다.
+
+아래 3-1~3-3 은 처음 작성한(2026-10-27) 일반 안내입니다.
 
 ### 3-1. 설치 (처음 한 번)
 OpenDesign 공식 안내를 따릅니다. 이 문서는 요약만 적습니다.
@@ -74,11 +80,10 @@ OpenDesign README·QUICKSTART 에 따르면 설정(**Models & providers**)에서
 - OpenDesign 의 BYOK 실행은 파일 도구 없이 완성된 HTML 하나를 돌려주는 방식이라고 문서에 적혀 있습니다.
 
 ### 3-2. 디자인 시스템 가져오기
-OpenDesign 화면 기준(영어 메뉴):
-1. **Settings → Design Systems → Add design system**
-2. **Source: Local** → **Project path** 에 `dist/open-design/design-systems/conference-<id>` 폴더 경로 → **Import from project**
-   - **Structure** 선택지가 나오면 **Verbatim**(파일을 그대로 사용)을 권장합니다.
-3. 목록에 "… (conference-site)" 이름으로 나타나면 성공입니다.
+OpenDesign 화면 기준(한국어 메뉴 / 영어 메뉴):
+1. **설정 → 디자인 시스템 추가** (Settings → Add design system)
+2. **로컬** (Local) → **프로젝트 경로** (Project path)에 `open-design/design-systems/conference-<id>` 또는 묶음 ZIP 의 `design-system/conference-…` 폴더 경로 → **프로젝트에서 가져오기** (Import from project)
+3. OpenDesign 코드 확인(2026-11-02): 이 가져오기는 폴더를 분석해 디자인 시스템을 **새로 만듭니다**. 색·글꼴 값(`tokens.css`의 CSS 변수), 이름·설명(`package.json`), 핵심 규칙(`README.md` 앞 1400자)은 들어가지만 `DESIGN.md` 글은 OpenDesign 이 새로 씁니다. "GitHub 에서 가져오기"는 저장소 맨 위 폴더만 받으므로 하위 폴더 주소는 쓸 수 없습니다.
 
 ### 3-3. 포스터 시안 만들기
 1. 새 프로젝트를 열고, 위에서 가져온 디자인 시스템을 고릅니다.
@@ -97,6 +102,7 @@ OpenDesign 화면 기준(영어 메뉴):
 
 ## 5. 확인한 것 / 확인하지 못한 것
 
-- 확인함(2026-11-02, 커밋 5a0c477): `craft/` 규칙 파일(Apache-2.0, 안의 일부는 refero_skill MIT 를 바탕으로 함), BYOK 설정이 OpenAI 호환·Anthropic 방식과 사용자 지정 주소(`baseUrl`)를 받는다는 문서 내용, BYOK 결과가 `<artifact>` 블록 하나라는 문서 내용, `skills/poster-hero` 포스터 스킬.
+- 확인함(2026-11-02, 커밋 5a0c477): 맥·윈도우 데스크톱 앱, 앱 한국어 번역, 로컬 CLI·API 제공자 설정과 Claude·Codex 프록시 칸(환경 변수 이름), 스킬 GitHub 폴더 링크 설치, 디자인 시스템 가져오기 동작, 저장소 `open-design/` 의 디자인 시스템 22개가 OpenDesign 검사 코드 통과, 포스터 스킬 SKILL.md 가 OpenDesign 해석 코드로 읽힘. 서울대 팩트챗 문서의 Claude Code·Codex·OpenCode 연결 방법.
+- 확인함(2026-11-02, 커밋 5a0c477, 웹 도구 관련): `craft/` 규칙 파일(Apache-2.0, 안의 일부는 refero_skill MIT 를 바탕으로 함), BYOK 설정이 OpenAI 호환·Anthropic 방식과 사용자 지정 주소(`baseUrl`)를 받는다는 문서 내용, BYOK 결과가 `<artifact>` 블록 하나라는 문서 내용, `skills/poster-hero` 포스터 스킬.
 - 확인함(저장소 v0.25.1, 2026-10-27): Apache-2.0 라이선스, 디자인 시스템 패키지 형식(`manifest.json` + `DESIGN.md` + `tokens.css`, 스키마 `od-design-system-project/v1`), 필수 토큰 목록(`packages/contracts/src/design-systems/token-schema.ts`), 설정 화면의 "Add design system → Local / GitHub" 가져오기 메뉴 이름, 포스터 관련 템플릿(`poster-hero`, `magazine-poster`, `image-poster`) 존재, 설치 방법(데스크톱·소스·Docker).
 - **확인하지 못함**: 실제 OpenDesign 앱에서 이 패키지를 가져왔을 때 그대로 인식되는지(Verbatim 모드 동작), GitHub 주소로 하위 폴더만 가져올 수 있는지, 학교 ChatGPT Edu 연결 가능 여부, 한국어 글꼴 렌더링 품질. 처음 써 보신 분이 결과를 이 문서에 보태 주세요.

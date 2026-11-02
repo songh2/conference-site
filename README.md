@@ -65,7 +65,8 @@ python3 scripts/build.py sites/my-workshop-2027 --deploy dist/my-workshop-2027  
 | `docs/manual-claude.md` | claude.ai·Claude Code 에서 쓰기 |
 | `docs/themes.md` | 테마 고르기, 서울대 단과대학 프리셋 목록·근거, 서울대 UI 규정, 프리셋 추가·로고 |
 | `docs/poster.md` | 인쇄용 포스터 만들기 — 배치 4종, 크기, 설정 항목, 인쇄 점검표 |
-| `docs/open-design.md` | OpenDesign 과 함께 쓰기 — 디자인 시스템·브리프 내보내기, 가져오기, 주의할 점 |
+| `docs/open-design.md` | OpenDesign 과 함께 쓰기 — 웹 도구 AI 디자인, 디자인 시스템·브리프 내보내기, 가져오기, 주의할 점 |
+| `open-design/README.md` | **OpenDesign 앱(맥·윈도우) 설치와 팩트챗 키 연결**, 디자인 시스템 22개·포스터 스킬 가져오기 |
 | `docs/security.md` | 무엇이 공개되는지, 공개 전 점검표, 사고 대응 |
 | `docs/faq.md` | 자주 묻는 질문 (발표자 자료 접수, 주소, 명단 등) |
 | `references/schema.md` | `conference.json` 모든 항목 |
@@ -91,6 +92,7 @@ conference-site/            ← 이 폴더 자체가 스킬 (SKILL.md 가 있는
 ├── docs/                   사람용 매뉴얼
 ├── chatgpt/                ChatGPT 프로젝트 지시문
 ├── index.html, web/        웹 도구 (GitHub Pages 로 공개, scripts/*.py 를 브라우저 안 파이썬으로 실행)
+├── open-design/            OpenDesign 앱용: 디자인 시스템 22개(design-systems/), 포스터 스킬(skills/conference-poster/), 안내서
 ├── tools/encode-email.html 브라우저에서 이메일 보호값 만들기 (파이썬 불필요)
 ├── blank/index.html        빈 템플릿 (conference.json 만 올려도 동작)
 ├── sites/example-2027/     가상 예시 사이트

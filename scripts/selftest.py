@@ -18,7 +18,10 @@
      conference.json 이 없으면 index.html 내장 자료를, 다른 홈페이지면 글만 가져오는지(로컬 서버로 시험),
      make_poster.py --draft 가 덜 채워진 자료로도 '미정'·'시안' 표시와 함께 포스터를 만드는지
 """
+import io
 import json
+import zipfile
+import os
 import re
 import shutil
 import subprocess
@@ -225,6 +228,11 @@ def main():
            and (craft / "LICENSE-Apache-2.0.txt").read_text(encoding="utf-8").lstrip().startswith("Apache License")
            and "nexu-io/open-design" in (craft / "README.md").read_text(encoding="utf-8"),
            "웹 도구 AI 디자인 규칙(OpenDesign craft) 파일·라이선스·출처 표기")
+        bz = zipfile.ZipFile(io.BytesIO(bridge.opendesign_bundle(json.dumps(data), "A3", "ko")))
+        bn = bz.namelist()
+        ok({"README.txt", "poster-brief.md", "skill/conference-poster/SKILL.md"} <= set(bn)
+           and any(n.startswith("design-system/conference-") and n.endswith("/manifest.json") for n in bn)
+           and ("qr.svg" in bn) == bool(data.get("site_url")), f"웹 도구 OpenDesign 앱용 묶음: {len(bn)}개 파일")
         hw = tmp / "t.hwpx"
         with zipfile.ZipFile(hw, "w") as z:
             z.writestr("Contents/section0.xml", '<hs:sec><hp:p id="1"><hp:run><hp:t>행사명: 시험 &amp; 학회</hp:t></hp:run></hp:p><hp:p id="2"><hp:run><hp:t>일시: 2027-02-11</hp:t></hp:run></hp:p></hs:sec>')
@@ -249,6 +257,8 @@ def main():
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
+    print("10. OpenDesign 앱용 파일 (open-design/)")
+    selftest_open_design_repo()
     print("9. 홈페이지 주소로 샘플 포스터")
     selftest_fetch_and_draft()
     print("FAILED %d" % fails if fails else "ALL PASSED")
@@ -322,6 +332,30 @@ def selftest_fetch_and_draft():
         ok("행사명 미정" in doc, "샘플 포스터: 행사명이 없으면 '행사명 미정'")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def selftest_open_design_repo():
+    import export_open_design as EOD2
+    tmp = Path(tempfile.mkdtemp())
+    try:
+        for pid, p in load_presets().items():
+            EOD2.export_theme(pid, p, tmp, stamp=False)
+        fresh = {f.relative_to(tmp / "design-systems").as_posix(): f.read_bytes() for f in (tmp / "design-systems").rglob("*") if f.is_file()}
+        repo_dir = ROOT / "open-design" / "design-systems"
+        repo = {f.relative_to(repo_dir).as_posix(): f.read_bytes() for f in repo_dir.rglob("*") if f.is_file()}
+        ok(fresh == repo, f"open-design/design-systems 가 themes/ 와 일치 ({len(repo)}개 파일) — 다르면 python3 scripts/export_open_design.py --repo")
+        rd = [len((repo_dir / d / "README.md").read_text(encoding="utf-8")) for d in os.listdir(repo_dir)]
+        ok(rd and max(rd) <= 1400, "디자인 시스템 README.md 가 OpenDesign 가져오기가 읽는 1400자 안에 들어감")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    sk = (ROOT / "open-design" / "skills" / "conference-poster" / "SKILL.md").read_text(encoding="utf-8")
+    head = sk.split("---", 2)[1] if sk.startswith("---") else ""
+    crafts = re.search(r"requires:\s*\[([^\]]*)\]", head.split("craft:", 1)[-1]) if "craft:" in head else None
+    names = [x.strip() for x in crafts.group(1).split(",")] if crafts else []
+    ok("name: conference-poster" in head and "mode: prototype" in head and names
+       and all((ROOT / "web" / "opendesign" / "craft" / f"{n}.md").is_file() for n in names) and len(sk.split("---", 2)[2].strip()) > 500,
+       f"OpenDesign 포스터 스킬 SKILL.md (craft {names})")
+    ok(len(list((ROOT).rglob("SKILL.md"))) == 2, "SKILL.md 는 저장소 맨 위(스킬)와 open-design/skills/conference-poster 두 개뿐 — OpenDesign 의 GitHub 설치가 헷갈리지 않음")
 
 
 def io_sink():

@@ -9,5 +9,6 @@
 - 이메일·연락처·참가자 명단(이름·소속 외)을 `conference.json` 이나 공개 저장소에 쓰지 않습니다. 이메일은 원본에 평문으로 두면 `build.py` 가 공개본에서 난독화합니다.
 - 포스터: `python3 scripts/make_poster.py sites/<slug> [--all] [--layout …] [--size A2] [--draft]` → `dist/<slug>/poster/`. 홈페이지 주소로 샘플 포스터: `python3 scripts/fetch_site.py <주소>` → `make_poster.py … --draft`. PDF 에는 Playwright, QR 에는 segno 필요(`docs/poster.md`). OpenDesign 연계는 `scripts/export_open_design.py`(`docs/open-design.md`).
 - 웹 도구(`index.html`, `web/`)는 `web/bridge.py` 가 `scripts/*.py` 를 브라우저 안 파이썬(Pyodide)으로 실행한다. 계산 로직은 `scripts/` 에만 두고, `scripts/`·`template/`·`themes/` 를 고치면 `python3 scripts/make_web_manifest.py` 로 `web/manifest.json` 을 갱신한다(`docs/manual-web.md` 8절).
+- OpenDesign 앱용 파일: `open-design/design-systems/` 는 `python3 scripts/export_open_design.py --repo` 로 다시 만든다(`themes/` 를 고치면 함께). `open-design/skills/conference-poster/SKILL.md` 는 OpenDesign 스킬 형식(frontmatter `od:`)이며 스킬 묶음(`package_skill.py`)에는 넣지 않는다. 안내: `open-design/README.md`.
 - 자체 시험: `python3 scripts/selftest.py` (예시 사이트 빌드, 빈 템플릿, 테마, 평문 이메일 검사).
 - 참고 문서: `references/schema.md`(항목 설명), `docs/`(사람용 매뉴얼).

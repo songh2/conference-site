@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 EXCLUDE_DIRS = {"dist", ".git", "__pycache__", "node_modules", ".DS_Store"}
 EXCLUDE_SUFFIX = {".pyc", ".zip", ".whl"}
 # 웹 도구(브라우저용, GitHub Pages 로 공개)는 스킬 묶음에 넣지 않는다 — AI 도우미에게는 필요 없고 크기만 늘린다
-EXCLUDE_TOP = {"web", "index.html", ".nojekyll"}
+EXCLUDE_TOP = {"web", "index.html", ".nojekyll", "open-design"}  # open-design/: OpenDesign 앱용(SKILL.md 가 따로 있어 Claude·ChatGPT 스킬 묶음과 섞지 않음)
 
 
 def main():

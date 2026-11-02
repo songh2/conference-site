@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "od-design-system-project/v1",
+  "id": "conference-snu-business",
+  "name": "SNU College of Business Administration (conference-site)",
+  "category": "Education & Academic Events",
+  "description": "Academic event theme exported from conference-site preset 'snu-business' (홈페이지 추출(공식 아님)). No logos bundled.",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/songh2/conference-site",
+    "branch": "main"
+  },
+  "files": {
+    "design": "DESIGN.md",
+    "tokens": "tokens.css"
+  }
+}

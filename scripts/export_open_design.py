@@ -40,7 +40,7 @@ def full_vars(preset_vars):
     return v
 
 
-def tokens_css(pid, name, v):
+def tokens_css(pid, name, v, stamp=True):
     """OpenDesign token contract(packages/contracts/src/design-systems/token-schema.ts)의 이름으로 옮긴다."""
     t = {
         "--bg": v["--bg"], "--surface": v["--surface"], "--surface-warm": v["--soft"],
@@ -67,7 +67,8 @@ def tokens_css(pid, name, v):
         "--cs-highlight": v["--accent"], "--cs-highlight-on": v["--accent-ink"], "--cs-highlight-soft": v["--accent-soft"],
     }
     body = "\n".join(f"  {k}: {val};" for k, val in t.items())
-    return f"/* {pid} — {name} (conference-site 테마에서 내보냄, {date.today().isoformat()}) */\n:root {{\n{body}\n}}\n"
+    when = f", {date.today().isoformat()}" if stamp else ""
+    return f"/* {pid} — {name} (conference-site 테마에서 내보냄{when}) */\n:root {{\n{body}\n}}\n"
 
 
 def design_md(pid, p, v):
@@ -126,7 +127,7 @@ Calm, credible academic event material: a deep, saturated field ({v['--primary-d
 """
 
 
-def export_theme(pid, p, out_root):
+def export_theme(pid, p, out_root, stamp=True):
     v = full_vars(p["vars"])
     d = out_root / "design-systems" / f"conference-{pid}"
     d.mkdir(parents=True, exist_ok=True)
@@ -142,8 +143,32 @@ def export_theme(pid, p, out_root):
     }
     (d / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (d / "DESIGN.md").write_text(design_md(pid, p, v), encoding="utf-8")
-    (d / "tokens.css").write_text(tokens_css(pid, name_en, v), encoding="utf-8")
+    (d / "tokens.css").write_text(tokens_css(pid, name_en, v, stamp), encoding="utf-8")
+    # OpenDesign 앱의 "디자인 시스템 추가 → 로컬/GitHub → 프로젝트에서 가져오기"는 폴더를 분석해 DESIGN.md 를 새로 쓴다
+    # (apps/daemon/src/design-systems/import.ts: package.json 의 name·description, README.md 앞 1400자, CSS 변수를 읽음).
+    # 그래서 이름·설명·핵심 규칙을 package.json 과 README.md 에도 짧게 넣어 둔다.
+    pkg = {"name": f"conference-{pid}", "private": True,
+           "description": f"{name_en} ({p['name'].get('ko', pid)}) — academic event palette from conference-site. No logos bundled."}
+    (d / "package.json").write_text(json.dumps(pkg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (d / "README.md").write_text(readme_md(pid, p, v), encoding="utf-8")
     return d
+
+
+def readme_md(pid, p, v):
+    """OpenDesign 가져오기가 읽는 README (앞 1400자만 쓰이므로 짧게)."""
+    head = "serif (Noto Serif KR)" if "Serif" in v["--font-head"] else "sans-serif (Noto Sans KR)"
+    return f"""# {p['name'].get('en', pid)} — conference-site academic event palette
+
+Preset `{pid}` from https://github.com/songh2/conference-site ({p['status']}).
+
+- Field: {v['--primary-deep']} -> {v['--primary']} -> {v['--hero-end']}, white text on it.
+- Highlight {v['--accent']} (text {v['--accent-ink']}) only for dates, labels and one main call-to-action.
+- Page {v['--bg']}, text {v['--ink']}, lines {v['--line']}. Display font: {head}; body: Noto Sans KR.
+- Korean text: word-break keep-all; Korean headline line-height at least 1.3, no negative letter-spacing.
+- Facts: every title, date, time, venue, name, affiliation and talk title must be copied exactly from the event brief. Never invent slogans, fees, deadlines or English names.
+- No generated photos of real people. No logos unless supplied by the organiser (SNU signature only in SNU Blue, SNU Gray, black or white).
+- Print posters: ISO A sizes, portrait; QR code from the brief bundle (qr.svg), at least 25 mm on A2.
+"""
 
 
 def tx(obj, lang="ko"):
@@ -254,7 +279,13 @@ def main():
     ap.add_argument("--all-themes", action="store_true")
     ap.add_argument("--brief", metavar="SITE_DIR", help="포스터 브리프를 만들 사이트 폴더 (예: sites/example-2027)")
     ap.add_argument("--out", default=str(ROOT / "dist" / "open-design"))
+    ap.add_argument("--repo", action="store_true", help="저장소의 open-design/design-systems/ 를 모든 테마로 다시 만든다(날짜 표시 없이)")
     args = ap.parse_args()
+    if args.repo:
+        root = ROOT / "open-design"
+        for pid, p in load_presets().items():
+            print(f"OK    {export_theme(pid, p, root, stamp=False).relative_to(ROOT)}")
+        return
     presets = load_presets()
     out_root = Path(args.out)
     ids = []

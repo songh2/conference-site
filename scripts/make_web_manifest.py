@@ -21,6 +21,7 @@ FILES = [
     "template/index.template.html", "template/style.css", "template/app.js", "template/poster.css",
     "template/poster.js", "template/registration.gs", "template/conference.skeleton.json",
     "references/schema.md", "web/bridge.py",
+    "open-design/skills/conference-poster/SKILL.md",   # 웹 도구의 "OpenDesign 앱용 묶음"에 넣는다
 ]
 EXAMPLE = "sites/example-2027"
 

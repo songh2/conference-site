@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "od-design-system-project/v1",
+  "id": "conference-snu-engineering",
+  "name": "SNU College of Engineering (conference-site)",
+  "category": "Education & Academic Events",
+  "description": "Academic event theme exported from conference-site preset 'snu-engineering' (공식 색 기반). No logos bundled.",
+  "source": {
+    "type": "github",
+    "url": "https://github.com/songh2/conference-site",
+    "branch": "main"
+  },
+  "files": {
+    "design": "DESIGN.md",
+    "tokens": "tokens.css"
+  }
+}

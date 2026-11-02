@@ -689,8 +689,8 @@ const CUSTOM = {
     box.appendChild(h('div', { class: 'row' }, [
       makeBtn,
       h('button', {
-        type: 'button', class: 'btn ghost', text: 'OpenDesign 브리프 받기',
-        onclick: async () => { try { const r = await E.callJson('opendesign_brief', JSON.stringify(state.data)); save(r.md, `${state.data.slug || 'site'}-poster-brief.md`, 'text/markdown'); toast('브리프를 받았습니다. AI 디자인 도구(OpenDesign 등)에 붙여 넣어 쓰세요.'); } catch (e) { toast('브리프를 만들지 못했습니다: ' + e.message, 'bad'); } },
+        type: 'button', class: 'btn ghost', text: 'OpenDesign 앱용 묶음 받기 (ZIP)', title: '사실 브리프·QR·사진·이 행사 디자인 시스템·포스터 스킬·안내문 — OpenDesign 앱에서 포스터를 만들 때',
+        onclick: async () => { try { const bytes = await E.call('opendesign_bundle', JSON.stringify(state.data), size.value, lang.value); save(new Blob([bytes], { type: 'application/zip' }), `${state.data.slug || 'site'}-opendesign.zip`, 'application/zip'); toast('OpenDesign 앱용 묶음을 받았습니다. 압축을 풀고 README.txt 의 순서대로 하세요.'); } catch (e) { toast('묶음을 만들지 못했습니다: ' + e.message, 'bad'); } },
       }),
     ]));
     box.appendChild(out);
