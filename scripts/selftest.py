@@ -14,6 +14,9 @@
   (PDF·PNG 변환과 글자 맞춤은 브라우저가 필요해 여기서는 시험하지 않는다.)
   8. 웹 도구(index.html + web/): 파일 목록(web/manifest.json)이 최신인지, web/bridge.py 가 만든 홈페이지·ZIP 이
      build.py 와 같은지, 등록 스크립트·포스터·글자 뽑기·ZIP 불러오기(경로 조작 차단)
+  9. 홈페이지 주소로 샘플 포스터: fetch_site.py 가 (이 스킬로 만든) 공개 홈페이지에서 conference.json·파일을,
+     conference.json 이 없으면 index.html 내장 자료를, 다른 홈페이지면 글만 가져오는지(로컬 서버로 시험),
+     make_poster.py --draft 가 덜 채워진 자료로도 '미정'·'시안' 표시와 함께 포스터를 만드는지
 """
 import json
 import re
@@ -232,8 +235,85 @@ def main():
         ok(not (work.parent / "escape.txt").exists() and not (work / "escape.txt").exists(), "웹 도구 ZIP 불러오기: 폴더 밖으로 쓰는 경로(..) 차단")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+    print("9. 홈페이지 주소로 샘플 포스터")
+    selftest_fetch_and_draft()
     print("FAILED %d" % fails if fails else "ALL PASSED")
     sys.exit(1 if fails else 0)
+
+
+def selftest_fetch_and_draft():
+    import contextlib
+    import functools
+    import http.server
+    import threading
+    import fetch_site as FS
+    tmp = Path(tempfile.mkdtemp())
+    try:
+        site = tmp / "ex"
+        shutil.copytree(ROOT / "sites" / "example-2027", site)
+        build(site, tmp / "www" / "ws2027", quiet=True)          # 이 스킬로 만든 공개 홈페이지
+        (tmp / "www" / "emb").mkdir()                            # conference.json 없이 index.html 만
+        shutil.copy2(tmp / "www" / "ws2027" / "index.html", tmp / "www" / "emb" / "index.html")
+        (tmp / "www" / "other").mkdir()                          # 다른 홈페이지
+        (tmp / "www" / "other" / "event.html").write_text(
+            "<html><head><title>행사 안내</title><script>var secret=1</script></head><body><h1>2026 가을 콜로키움</h1>"
+            "<p>일시: 2026년 11월 20일</p><style>p{}</style><p>장소: 가상대학교 101호</p></body></html>", encoding="utf-8")
+        handler = functools.partial(type("Q", (http.server.SimpleHTTPRequestHandler,), {"log_message": lambda *a: None}), directory=str(tmp / "www"))
+        srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        port = srv.server_address[1]
+        try:
+            with contextlib.redirect_stdout(io_sink()):
+                s1, src1 = FS.fetch(f"http://127.0.0.1:{port}/ws2027/index.html#program", tmp / "got1")
+                s2, src2 = FS.fetch(f"http://127.0.0.1:{port}/emb", tmp / "got2", with_assets=False)
+                s3, src3 = FS.fetch(f"http://127.0.0.1:{port}/other/event.html?id=3", tmp / "got3")
+        finally:
+            srv.shutdown()
+        pub = (tmp / "www" / "ws2027" / "conference.json").read_text(encoding="utf-8")
+        got = json.loads((s1 / "conference.json").read_text(encoding="utf-8"))
+        ok(src1 == "json" and got["slug"] == json.loads(pub)["slug"] and (s1 / "assets" / "poster.pdf").exists()
+           and (s1 / "assets" / "slides" / "gildong-hong.pdf").exists(), "fetch_site: 공개본 conference.json + 사진·PDF 내려받기")
+        ok(src2 == "embedded" and json.loads((s2 / "conference.json").read_text(encoding="utf-8"))["slug"] == "example-2027",
+           "fetch_site: conference.json 이 없으면 index.html 에 내장된 자료 사용")
+        page = (s3 / "_source" / "page.txt").read_text(encoding="utf-8") if src3 == "text" else ""
+        ok(src3 == "text" and "2026 가을 콜로키움" in page and "101호" in page and "secret" not in page and not (s3 / "conference.json").exists(),
+           "fetch_site: 다른 홈페이지는 글만 저장(스크립트 제외) → AI 가 채움")
+        ok(FS.site_base("https://a.org/x/index.html#p") == "https://a.org/x/" and FS.site_base("https://a.org/x") == "https://a.org/x/",
+           "fetch_site: 주소 정리(index.html·# 제거, 끝 / 보충)")
+        doc, info = build_poster(s1, None, None, None, None, draft=True)
+        ok(info["draft"] and 'class="draft-mark"' in doc, "가져온 홈페이지로 샘플(시안) 포스터")
+        # 덜 채워진 자료
+        cases = {
+            "empty": ({}, "photo", 2),
+            "title_dates": ({"title": {"ko": "겨울 워크숍", "en": ""}, "dates": {"start": "2027-01-20"}}, "photo", 1),
+            "speakers": ({"title": {"ko": "워크숍", "en": ""}, "venue": {"name": {"ko": "129동", "en": ""}},
+                          "speakers": [{"id": "a", "name": {"ko": "가", "en": ""}}, {"id": "b", "name": {"ko": "나", "en": ""}}],
+                          "program": [{"date": "", "label": {"ko": "", "en": ""}, "items": [{"time": "", "title": {"ko": "", "en": ""}}]}]}, "speakers", 1),
+            "bad_types": ({"title": "문자열", "speakers": "x", "program": None}, "photo", 2),
+        }
+        for name, (data, lay, tba) in cases.items():
+            d = tmp / "draft" / name
+            d.mkdir(parents=True)
+            (d / "conference.json").write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            try:
+                build_poster(d, None, None, None, None)
+                refused = False
+            except SystemExit:
+                refused = True
+            doc, info = build_poster(d, None, None, None, None, draft=True)
+            ok(refused and info["layout"] == lay and doc.count(">미정<") == tba and 'class="draft-mark"' in doc
+               and any(w.startswith("시안:") for w in info["warnings"]),
+               f"샘플 포스터({name}): 일반 모드는 거부, 시안은 {lay}·미정 {tba}칸·시안 표시")
+        doc, _ = build_poster(tmp / "draft" / "empty", None, None, None, None, draft=True)
+        ok("행사명 미정" in doc, "샘플 포스터: 행사명이 없으면 '행사명 미정'")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def io_sink():
+    import io
+    return io.StringIO()
 
 
 if __name__ == "__main__":

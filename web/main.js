@@ -120,6 +120,7 @@ function renderTab() {
   const panel = $('#panel');
   panel.innerHTML = '';
   panel.appendChild(h('h2', { class: 'panel-title', text: tab.title }));
+  if (tab.id === 'poster') panel.appendChild(urlBox('poster')); // 홈페이지 주소로 샘플 포스터 — 탭 맨 위
   if (tab.fields) { const box = h('div', { class: 'form' }); renderFields(box, tab.fields, ctx()); panel.appendChild(box); }
   if (tab.custom && CUSTOM[tab.custom]) panel.appendChild(CUSTOM[tab.custom]());
   const i = TABS.indexOf(tab);
@@ -222,6 +223,142 @@ async function importFile(file) {
   } catch (e) { toast('불러오지 못했습니다: ' + e.message, 'bad'); }
 }
 
+// ---------------------------------------------------------------- 홈페이지 주소에서 가져오기
+// 이 도구(스킬)로 만든 홈페이지: 공개본 conference.json(또는 index.html 에 내장된 자료)을 그대로 가져온다 → AI 불필요.
+// 그 밖의 홈페이지: 페이지 글을 AI(시작하기 탭에 넣은 팩트챗 등 본인 키)가 읽어 conference.json 으로 정리한다.
+// 브라우저 보안 규칙(CORS) 때문에, 다른 사이트에서 읽는 것을 허용한 홈페이지만 읽을 수 있다(GitHub Pages 는 허용).
+const URL_LIMIT = { one: 25 * 1024 * 1024, total: 120 * 1024 * 1024, text: 60000 };
+function siteBase(raw) {
+  const t = String(raw || '').trim();
+  if (!t) throw new Error('홈페이지 주소를 넣어 주세요 (예: https://계정이름.github.io/ntc2027/).');
+  let u;
+  try { u = new URL(/^[a-z]+:\/\//i.test(t) ? t : 'https://' + t); } catch (e) { throw new Error('주소 형식이 올바르지 않습니다 (예: https://계정이름.github.io/ntc2027/).'); }
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname); // 개발·시험용
+  if (u.protocol !== 'https:' && !(local && u.protocol === 'http:')) throw new Error('https:// 로 시작하는 주소를 넣어 주세요 (이 도구는 https 주소만 읽을 수 있습니다).');
+  u.hash = ''; u.search = '';
+  if (!u.pathname.endsWith('/')) {
+    const last = u.pathname.split('/').pop();
+    u.pathname = last.includes('.') ? u.pathname.slice(0, -last.length) : u.pathname + '/';
+  }
+  return u;
+}
+function looksLikeConf(d) {
+  return !!d && typeof d === 'object' && !Array.isArray(d) && ('title' in d || 'slug' in d) && ['dates', 'venue', 'program', 'speakers'].some((k) => k in d);
+}
+const corsHelp = '이 홈페이지는 다른 사이트(이 도구)에서 내용을 읽는 것을 허용하지 않았거나, 주소가 틀렸거나, 인터넷 연결에 문제가 있습니다. '
+  + '대신 ① 그 홈페이지를 열고 Ctrl+P → "PDF로 저장" 한 파일을 "시작하기" 탭의 "자료에서 채우기"에 올리거나, ② 홈페이지 저장소의 conference.json 을 내려받아 "불러오기" 하세요.';
+async function getUrl(url, as) {
+  let r;
+  try { r = await fetch(url, { credentials: 'omit', cache: 'no-cache' }); } catch (e) { const err = new Error(corsHelp); err.cors = true; throw err; }
+  if (!r.ok) { const err = new Error(`주소에서 ${r.status} 응답을 받았습니다 (${url})`); err.status = r.status; throw err; }
+  return as === 'json' ? r.json() : as === 'bytes' ? r : r.text();
+}
+function pageText(doc) {
+  doc.querySelectorAll('script, style, noscript, template, svg, iframe').forEach((n) => n.remove());
+  const title = (doc.querySelector('title') || {}).textContent || '';
+  const desc = (doc.querySelector('meta[name="description"]') || { getAttribute: () => '' }).getAttribute('content') || '';
+  const body = (doc.body ? doc.body.textContent : doc.documentElement.textContent || '').replace(/[ \t ]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim();
+  return [title && '페이지 제목: ' + title.trim(), desc && '설명: ' + desc.trim(), body].filter(Boolean).join('\n\n').slice(0, URL_LIMIT.text);
+}
+async function readSite(raw, step) {
+  const base = siteBase(raw);
+  const t = String(raw).trim();
+  const page = new URL(/^[a-z]+:\/\//i.test(t) ? t : 'https://' + t); page.hash = '';
+  // ① 공개본 conference.json
+  step('홈페이지의 conference.json 을 찾는 중…');
+  try {
+    const d = await getUrl(new URL('conference.json', base).href, 'json');
+    if (looksLikeConf(d)) return { data: d, source: 'json', base };
+  } catch (e) { /* 없거나 읽을 수 없으면 ② 로 */ }
+  // ② 홈페이지 HTML (내장 자료 → 없으면 AI)
+  step('홈페이지를 읽는 중…');
+  const html = await getUrl(page.href, 'text');
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const emb = doc.getElementById('site-data');
+  if (emb) {
+    try { const d = JSON.parse(emb.textContent); if (looksLikeConf(d)) return { data: d, source: 'embedded', base }; } catch (e) { /* AI 로 */ }
+  }
+  const text = pageText(doc);
+  if (text.replace(/\s/g, '').length < 30) throw new Error('홈페이지에서 읽을 글이 거의 없습니다(그림으로만 된 페이지일 수 있음). 홈페이지를 PDF로 저장해 "자료에서 채우기"에 올려 보세요.');
+  return { text, source: 'ai', base, page };
+}
+async function fetchAssets(d, base, step) {
+  const refs = new Set();
+  const walk = (o) => { if (typeof o === 'string') { if (o.startsWith('assets/') && !o.split('/').includes('..')) refs.add(o); } else if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') Object.values(o).forEach(walk); };
+  walk(d);
+  let total = 0, n = 0; const skipped = [];
+  for (const ref of refs) {
+    step(`사진·파일 가져오는 중… (${++n}/${refs.size})`);
+    try {
+      const r = await getUrl(new URL(ref, base).href, 'bytes');
+      const len = Number(r.headers.get('content-length') || 0);
+      if (len > URL_LIMIT.one || total + len > URL_LIMIT.total) { skipped.push(ref); continue; }
+      const bytes = new Uint8Array(await r.arrayBuffer());
+      if (bytes.length > URL_LIMIT.one || total + bytes.length > URL_LIMIT.total) { skipped.push(ref); continue; }
+      total += bytes.length;
+      await E.putAsset(ref, bytes, r.headers.get('content-type') || '');
+    } catch (e) { skipped.push(ref); }
+  }
+  return { got: refs.size - skipped.length, skipped };
+}
+async function importFromUrl(raw, opts) {
+  const o = opts || {};
+  const step = o.status || (() => {});
+  try { siteBase(raw); } catch (e) { toast('주소를 확인해 주세요: ' + e.message, 'bad'); return false; }
+  const cur = state.data || {};
+  if ((tl(cur.title) || cur.slug) && !confirm(`지금 작업 중인 "${tl(cur.title) || cur.slug}" 을(를) 이 홈페이지의 내용으로 바꿉니다.\n먼저 "원본 저장"을 해 두면 나중에 다시 불러올 수 있습니다.\n\n계속할까요?`)) return false;
+  try {
+    const got = await readSite(raw, step);
+    let d, msg;
+    if (got.source === 'ai') {
+      const s = AI.loadSettings();
+      if (!s.key) throw new Error('이 홈페이지는 이 도구로 만든 것이 아니어서 AI 가 글을 읽어 정리해야 합니다. "시작하기" 탭의 AI 칸에 API 키(서울대 구성원은 팩트챗 키)를 넣은 뒤 다시 눌러 주세요.');
+      if (!guardBase(s)) return false;
+      step('AI 가 홈페이지 글을 정리하는 중… (보통 1~3분)');
+      const [schema, skeleton] = await Promise.all([fetch('references/schema.md').then((r) => r.text()), fetch('template/conference.skeleton.json').then((r) => r.text())]);
+      const sys = AI.systemPrompt({ schema, skeleton, themes: state.themes, today: today() });
+      const parts = [{ kind: 'text', name: '홈페이지 ' + got.page.href, text: got.text }];
+      const r = await AI.extract(s, sys, parts, (o.extra || '') + `\n이 자료는 행사 홈페이지(${got.page.href})의 글입니다. site_url 에는 이 주소를 넣으세요.`);
+      d = AI.merge(await freshData(), AI.parseJson(r.text), 'replace');
+      await E.clearAssets();
+      msg = 'AI 가 홈페이지 글을 정리했습니다. AI 는 틀릴 수 있으니 각 탭에서 원래 홈페이지와 대조하세요.';
+    } else {
+      d = got.data;
+      await E.clearAssets();
+      const a = await fetchAssets(d, got.base, step);
+      msg = `홈페이지 정보를 가져왔습니다(${got.source === 'json' ? '공개본 conference.json' : '홈페이지에 내장된 자료'}, 파일 ${a.got}개)` + (a.skipped.length ? ` — 가져오지 못한 파일 ${a.skipped.length}개(너무 크거나 없음)` : '') + '. 이메일은 공개본이라 난독화된 상태입니다.';
+    }
+    const sk = await freshData();
+    for (const k of Object.keys(sk)) if (!(k in d)) d[k] = sk[k];
+    if (!d.site_url) d.site_url = got.source === 'ai' ? got.page.href : got.base.href;
+    step('');
+    if (o.poster) { state.posterAuto = true; state.posterDraft = true; state.tab = 'poster'; }
+    setData(d, msg);
+    return true;
+  } catch (e) {
+    step('');
+    toast(e.message, 'bad');
+    return false;
+  }
+}
+function urlBox(where) {
+  const forPoster = where === 'poster';
+  const input = h('input', { class: 'f-input', type: 'url', id: 'url-' + where, inputmode: 'url', spellcheck: 'false', placeholder: 'https://계정이름.github.io/ntc2027/' });
+  const status = h('div', { class: 'ai-status' });
+  const btn = h('button', {
+    type: 'button', class: 'btn', text: forPoster ? '가져와서 샘플 포스터 만들기' : '이 주소에서 불러오기',
+    onclick: async () => { btn.disabled = true; try { await importFromUrl(input.value, { poster: forPoster, status: (m) => { status.textContent = m; } }); } finally { btn.disabled = false; } },
+  });
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); btn.click(); } });
+  return h('div', { class: 'box url-box' }, [
+    h('h3', { text: forPoster ? '홈페이지 주소로 샘플 포스터 만들기' : '공개된 홈페이지 주소에서 불러오기' }),
+    h('p', { class: 'f-help', text: (forPoster ? '홈페이지가 다 완성되지 않았어도 됩니다. 주소를 넣으면 그 홈페이지의 정보로 샘플(시안) 포스터를 바로 만듭니다(빈 칸은 "미정"). ' : '')
+      + '이 도구(스킬)로 만든 홈페이지는 AI 없이 바로 가져오고, 다른 홈페이지는 "시작하기" 탭에 넣은 AI 키(서울대 구성원은 팩트챗)로 글을 읽어 정리합니다. 지금 작업 중인 내용은 가져온 내용으로 바뀝니다.' }),
+    h('div', { class: 'key-row' }, [input, btn]),
+    status,
+  ]);
+}
+
 // ---------------------------------------------------------------- 탭별 화면
 const CUSTOM = {
   start() {
@@ -234,6 +371,7 @@ const CUSTOM = {
       h('button', { type: 'button', class: 'start-card', onclick: () => file.click() }, [h('b', { text: '불러오기' }), h('span', { text: '보관한 conference.json 이나 예전 ZIP' })]),
       file,
     ]));
+    box.appendChild(urlBox('start'));
     const cur = state.data;
     box.appendChild(h('div', { class: 'note' }, [
       h('b', { text: '지금 작업 중: ' }), tl(cur.title) || '(행사명 없음)', cur.slug ? ` (${cur.slug})` : '',
@@ -286,7 +424,9 @@ const CUSTOM = {
   },
 
   poster() {
+    const wrap = h('div', { class: 'custom' });
     const box = h('div', { class: 'custom box' });
+    wrap.appendChild(box);
     box.appendChild(h('h3', { text: '포스터 만들기' }));
     box.appendChild(h('p', { class: 'f-help', text: '글은 모두 위에서 입력한 행사 정보에서 가져옵니다. 만든 뒤 "새 창에서 열기"를 누르고 Ctrl+P → 대상 "PDF로 저장", 여백 "없음", "배경 그래픽" 켜기로 저장하세요.' }));
     const p = state.data.poster || {};
@@ -296,36 +436,50 @@ const CUSTOM = {
     const lang = sel([['both', '한국어 + 영어'], ['ko', '한국어'], ['en', 'English']], p.lang || 'both');
     const th = sel([['', '홈페이지와 같은 배색']].concat(state.themes.map((t) => [t.id, (t.name && t.name.ko) || t.id])), '');
     box.appendChild(h('div', { class: 'poster-controls' }, [h('label', {}, ['배치 ', lay]), h('label', {}, ['크기 ', size]), h('label', {}, ['언어 ', lang]), h('label', {}, ['배색 ', th])]));
+    const draft = h('input', { type: 'checkbox', id: 'poster-draft' });
+    draft.checked = state.posterDraft != null ? state.posterDraft : !!(state.check && state.check.errors.length);
+    draft.addEventListener('change', () => { state.posterDraft = draft.checked; });
+    box.appendChild(h('div', { class: 'row' }, [h('span', { class: 'chip' }, [draft, h('label', { for: 'poster-draft', text: '샘플(시안)로 만들기 — 빈 칸은 "미정"으로 두고, 모서리에 "시안" 표시' })])]));
     const out = h('div', { class: 'poster-out' });
     let html = '';
-    box.appendChild(h('div', { class: 'row' }, [
-      h('button', {
+    let scrollAfter = false;
+    const makeBtn = h('button', {
         type: 'button', class: 'btn', text: '포스터 만들기',
         onclick: async () => {
           try {
-            const r = await E.callJson('poster', JSON.stringify(state.data), lay.value === 'auto' ? 'auto' : lay.value, size.value, lang.value, th.value);
+            makeBtn.disabled = true;
+            const r = await E.callJson('poster', JSON.stringify(state.data), lay.value === 'auto' ? 'auto' : lay.value, size.value, lang.value, th.value, draft.checked);
             html = r.html;
             out.innerHTML = '';
             const fr = h('iframe', { class: 'poster-frame', title: '포스터 미리보기', sandbox: 'allow-scripts' });
             fr.srcdoc = html;
             out.append(
-              h('div', { class: 'f-help', text: `배치 ${r.info.layout} · ${r.info.size} · ${r.info.lang}` + (r.info.qr ? ' · QR 코드 포함' : '') }),
+              h('div', { class: 'f-help', text: `배치 ${r.info.layout} · ${r.info.size} · ${r.info.lang}` + (r.info.qr ? ' · QR 코드 포함' : '') + (r.info.draft ? ' · 샘플(시안)' : '') }),
               ...r.info.warnings.map((w) => h('div', { class: 'msg warn', text: w })),
               fr,
               h('div', { class: 'row' }, [
                 h('button', { type: 'button', class: 'btn-sm', text: '새 창에서 열기 (인쇄·PDF 저장)', onclick: () => window.open(URL.createObjectURL(new Blob([html], { type: 'text/html' })), '_blank', 'noopener') }),
                 h('button', { type: 'button', class: 'btn-sm ghost', text: 'HTML 파일로 받기', onclick: () => save(html, `poster-${r.info.layout}-${r.info.size}-${r.info.lang}.html`, 'text/html') }),
               ]));
-          } catch (e) { toast('포스터를 만들지 못했습니다: ' + e.message, 'bad'); }
+          } catch (e) {
+            const m = String(e.message || e).replace(/\(또는 샘플 시안으로 만드세요: --draft\)/, '');
+            toast('포스터를 만들지 못했습니다: ' + m + (/먼저 고치세요/.test(m) ? ' — 위의 "샘플(시안)로 만들기"를 켜면 빈 칸을 "미정"으로 두고 만들 수 있습니다.' : ''), 'bad');
+          } finally {
+            makeBtn.disabled = false;
+            if (scrollAfter) { scrollAfter = false; box.scrollIntoView({ block: 'start' }); }
+          }
         },
-      }),
+      });
+    box.appendChild(h('div', { class: 'row' }, [
+      makeBtn,
       h('button', {
         type: 'button', class: 'btn ghost', text: 'OpenDesign 브리프 받기',
         onclick: async () => { try { const r = await E.callJson('opendesign_brief', JSON.stringify(state.data)); save(r.md, `${state.data.slug || 'site'}-poster-brief.md`, 'text/markdown'); toast('브리프를 받았습니다. AI 디자인 도구(OpenDesign 등)에 붙여 넣어 쓰세요.'); } catch (e) { toast('브리프를 만들지 못했습니다: ' + e.message, 'bad'); } },
       }),
     ]));
     box.appendChild(out);
-    return box;
+    if (state.posterAuto) { state.posterAuto = false; scrollAfter = true; setTimeout(() => makeBtn.click(), 0); }
+    return wrap;
   },
 
   export() {

@@ -18,7 +18,7 @@
 [검사·보고] 코드를 실행할 수 있으면 python3 scripts/validate.py sites/<slug>/conference.json 과 python3 scripts/build.py sites/<slug> --deploy dist/<slug> 를 돌리고, ERROR 는 고치고 WARN 은 "확인 필요 목록"으로 보고한다. 실행할 수 없으면 schema.md 기준으로 스스로 점검한다(필수 항목, 날짜 형식, ko/en 누락, speaker_id 연결).
 보고 순서: 1) 만든 파일 2) 확인 필요 목록(_todo + 경고) 3) 다음 단계(GitHub 에 올리기: docs/manual-github-pages.md, 등록 양식: docs/manual-google-sheet.md).
 
-[포스터] "포스터 만들어 줘"는 같은 conference.json 으로 scripts/make_poster.py 를 실행한다(배치 program/speakers/lecture/photo, A1~A4, docs/poster.md). 코드를 실행할 수 없으면 scripts/export_open_design.py 의 브리프 형식(사실 정보 목록 + 규칙)으로 포스터 작업 지시서를 써 주고, 사실을 지어내지 않는다. 실존 인물 사진을 생성하지 않는다.
+[포스터] "포스터 만들어 줘"는 같은 conference.json 으로 scripts/make_poster.py 를 실행한다(배치 program/speakers/lecture/photo, A1~A4, docs/poster.md). 홈페이지 주소만 주고 샘플 포스터를 원하면 scripts/fetch_site.py <주소> → make_poster.py <폴더> --draft(빈 칸 '미정', '시안' 표시). 인터넷이 막혀 있으면 홈페이지의 conference.json 이나 PDF 를 올려 달라고 하거나 웹 도구 포스터 탭의 "홈페이지 주소로 샘플 포스터"를 안내한다. 코드를 실행할 수 없으면 scripts/export_open_design.py 의 브리프 형식(사실 정보 목록 + 규칙)으로 포스터 작업 지시서를 써 주고, 사실을 지어내지 않는다. 실존 인물 사진을 생성하지 않는다.
 
 [웹 도구] 코드를 실행할 수 없거나 사용자가 직접 확인하고 싶어 하면, 완성한 conference.json 을 웹 도구(https://songh2.github.io/conference-site/ → 시작하기 → 불러오기)에서 열어 미리보기·검사·배포용 ZIP 받기를 하도록 안내한다.
 

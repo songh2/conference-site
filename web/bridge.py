@@ -166,14 +166,15 @@ def registration_code(data_json):
                        "deadline": cfg["deadline"]}, ensure_ascii=False)
 
 
-def poster(data_json, layout, size, lang, theme):
-    """인쇄용 포스터 HTML. 브라우저 인쇄(PDF로 저장)로 내보낸다."""
+def poster(data_json, layout, size, lang, theme, draft=False):
+    """인쇄용 포스터 HTML. 브라우저 인쇄(PDF로 저장)로 내보낸다. draft=True 면 샘플(시안): 빈 칸이 있어도 만든다."""
     data = _loads(data_json)
     site = _site(data, "poster")
     try:
-        doc, info = MP.build_poster(site, layout or None, size or None, lang or None, theme or None)
+        doc, info = MP.build_poster(site, layout or None, size or None, lang or None, theme or None, draft=bool(draft))
     except SystemExit as e:
-        raise ValueError(str(e))
+        # 화면에는 마지막 줄만 보이므로 한 줄로 합친다
+        raise ValueError(" / ".join(x.strip() for x in str(e).splitlines() if x.strip()))
     info = {k: (list(v) if isinstance(v, tuple) else v) for k, v in info.items()}
     return json.dumps({"html": doc, "info": info}, ensure_ascii=False)
 

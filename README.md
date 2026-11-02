@@ -19,7 +19,7 @@
 | 이메일 보호 | 위원·발표자 이메일은 그림 속 확인 코드를 입력해야 보임 (수집 방지) |
 | 테마 | `"theme": "snu-science"` 처럼 한 줄로 배색 변경. **서울대학교 공통 + 16개 단과대학·학부 프리셋** 과 범용 5종. 공개 후 주소에 `?theme=<id>` 를 붙여 미리보기 |
 | 인쇄 | 메뉴·버튼 제외, 일정·초록·위원·명단이 문서로 출력 |
-| **포스터** | 같은 `conference.json` 으로 **A1~A4 인쇄용 포스터(PDF·PNG)**. 일정표형·연사형·강연형·사진형, 테마 배색, QR 코드, 글자 크기 자동 맞춤 → `docs/poster.md` |
+| **포스터** | 같은 `conference.json` 으로 **A1~A4 인쇄용 포스터(PDF·PNG)**. 일정표형·연사형·강연형·사진형, 테마 배색, QR 코드, 글자 크기 자동 맞춤. **홈페이지 주소만으로 샘플(시안) 포스터**(덜 채워진 홈페이지도 가능, 빈 칸은 "미정") → `docs/poster.md` |
 | OpenDesign 연계 | 행사 정보 브리프와 테마를 [OpenDesign](https://github.com/nexu-io/open-design) 디자인 시스템 형식으로 내보내 AI 로 포스터 시안 다듬기 → `docs/open-design.md` |
 | 유지 | 행사 후 발표자료·사진·포스터 추가 → 증빙 자료 주소로 보존. 종료 표시 자동 |
 
@@ -85,7 +85,7 @@ conference-site/            ← 이 폴더 자체가 스킬 (SKILL.md 가 있는
 │                           + 포스터 틀 (poster.css, poster.js)
 ├── themes/                 배색 프리셋 (snu + 서울대 단과대학 16종, 범용 5종, _template)
 ├── scripts/                파이썬 스크립트 (new_site, validate, build, import_speakers, import_participants,
-│                           make_registration_script, encode_email, theme_gallery, make_poster, export_open_design,
+│                           make_registration_script, encode_email, theme_gallery, make_poster, fetch_site, export_open_design,
 │                           package_skill, selftest)
 ├── references/             AI 와 사람이 같이 보는 참고 문서
 ├── docs/                   사람용 매뉴얼

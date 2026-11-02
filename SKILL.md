@@ -82,6 +82,14 @@ python3 scripts/make_poster.py sites/<slug> --layout lecture --size A3 --lang ko
 - QR 코드를 넣으려면 `site_url`(공개된 홈페이지 주소)이 필요하다. 아직 없으면 사용자에게 묻거나 비워 두고 경고를 전한다.
 - 강연형 사진(`speakers[].photo`)·후원 로고(`sponsors[].logo`)는 사용자가 준 파일만, 본인 동의·사용 권한이 확인된 것만 쓴다. 실존 인물 사진을 생성하거나 다른 포스터에서 잘라 쓰지 않는다.
 - `WARN 내용이 용지에 다 들어가지 않습니다` 가 나오면 용지를 키우거나 배치를 바꿔 다시 만들고, 결과 PNG 를 직접 보고 확인한 뒤 전달한다.
+- **홈페이지 주소만 주고 "샘플 포스터" 를 요청하면**(홈페이지가 덜 채워졌거나 완성된 경우 모두) 그 주소에서 정보를 가져와 시안을 만든다:
+  ```bash
+  python3 scripts/fetch_site.py <홈페이지 주소>            # → sites/<slug>-from-web/ (공개본 conference.json·사진·PDF)
+  python3 scripts/make_poster.py sites/<slug>-from-web --draft   # 빈 칸은 '미정', 모서리에 '시안' 표시
+  ```
+  - 이 스킬로 만든 홈페이지면 공개본 `conference.json`(없으면 `index.html` 에 내장된 자료)을 그대로 쓴다. 다른 홈페이지면 `fetch_site.py` 가 글만 `_source/page.txt` 에 저장하고 종료 코드 2 로 끝난다 → 그 글을 읽어 `conference.json` 을 채운 뒤(자료에 없는 것은 비움, `site_url` 은 그 주소) 같은 명령으로 시안을 만든다.
+  - 인터넷이 막힌 실행 환경이면 `fetch_site.py` 가 실패한다. 그때는 홈페이지 저장소의 `conference.json`, 또는 홈페이지를 PDF로 저장한 파일을 올려 달라고 하거나, 웹 도구(https://songh2.github.io/conference-site/ → 포스터 탭 → "홈페이지 주소로 샘플 포스터 만들기")를 안내한다.
+  - `--draft` 는 확인용 시안이다. 경고(`시안: 아직 채우지 않았거나…`)에 나온 빈 항목을 사용자에게 정리해 전하고, 주관자 확인이 끝나면 `--draft` 없이 다시 만든다.
 - 사용자가 "더 화려하게", "일러스트 넣어서" 처럼 기본 틀을 넘는 디자인을 원하면 `python3 scripts/export_open_design.py --brief sites/<slug>` 로 브리프와 디자인 시스템을 만들어 OpenDesign 등 AI 디자인 도구로 가져가는 방법(`docs/open-design.md`)을 안내한다.
 
 ### 7. 기존 사이트 수정

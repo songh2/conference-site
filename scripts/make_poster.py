@@ -6,6 +6,8 @@
     python3 scripts/make_poster.py sites/<slug> --layout speakers --size A3 --lang both
     python3 scripts/make_poster.py sites/<slug> --all                    # 네 가지 배치를 모두 만들어 비교
     python3 scripts/make_poster.py sites/<slug> --theme snu-science      # 다른 배색으로
+    python3 scripts/make_poster.py sites/<slug> --draft                  # 샘플(시안): 정보가 덜 채워져도 만듦
+                                                                         #   (홈페이지 주소에서 가져오기: scripts/fetch_site.py)
 
 배치(layout):
     program   일정표형 — 제목·일시·장소 + 프로그램 표 (학술대회·워크숍)
@@ -23,6 +25,7 @@
 QR 코드는 segno 가 설치되어 있을 때 만든다 (pip install segno). 없으면 주소만 글자로 넣는다.
 """
 import argparse
+import copy
 import base64
 import hashlib
 import html
@@ -46,10 +49,12 @@ SERIF = '"Noto Serif KR", "Noto Serif CJK KR", "Nanum Myeongjo", serif'
 UI = {
     "ko": {"date": "일시", "venue": "장소", "program": "프로그램", "speakers": "연사", "host": "주최", "support": "후원",
            "tentative": "예정", "site": "홈페이지", "deadline": "사전등록 마감", "fee": "등록비", "highlights": "주요 행사",
-           "abstract": "강연 요지", "contact": "문의", "scan": "QR 코드로 홈페이지 바로가기"},
+           "abstract": "강연 요지", "contact": "문의", "scan": "QR 코드로 홈페이지 바로가기",
+           "tba": "미정", "title_tba": "행사명 미정", "draft": "시안 · 확정 전"},
     "en": {"date": "Date", "venue": "Venue", "program": "Programme", "speakers": "Speakers", "host": "Hosted by", "support": "Supported by",
            "tentative": "tentative", "site": "Website", "deadline": "Registration deadline", "fee": "Fee", "highlights": "Highlights",
-           "abstract": "Abstract", "contact": "Contact", "scan": "Scan for the website"},
+           "abstract": "Abstract", "contact": "Contact", "scan": "Scan for the website",
+           "tba": "TBA", "title_tba": "Title TBA", "draft": "DRAFT"},
 }
 
 
@@ -153,19 +158,32 @@ def theme_vars(data, theme_override):
     }
 
 
+def filled_item(it):
+    """프로그램 항목 중 시간·제목·연사 중 하나라도 적힌 것 (빈 양식 줄은 포스터에 넣지 않는다)."""
+    if not isinstance(it, dict):
+        return False
+    def has(v):
+        return bool(v.strip()) if isinstance(v, str) else isinstance(v, dict) and any((x or "").strip() for x in v.values() if isinstance(x, str))
+    return any(has(it.get(k)) for k in ("time", "title", "speaker_id", "speaker"))
+
+
 def pick_layout(data):
     poster = data.get("poster") or {}
     lay = poster.get("layout") or "auto"
     if lay != "auto":
         return lay
-    speakers = [s for s in data.get("speakers") or [] if s.get("name")]
+    speakers = [s for s in data.get("speakers") or [] if isinstance(s, dict) and s.get("name")]
+    items = sum(1 for d in data.get("program") or [] if isinstance(d, dict) for it in d.get("items") or [] if filled_item(it))
     if (data.get("hero") or {}).get("image") or poster.get("image"):
         return "photo"
     if len(speakers) == 1:
         return "lecture"
     if len(speakers) >= 6:
         return "speakers"
-    return "program"
+    if items:
+        return "program"
+    # 일정이 아직 없을 때(샘플 포스터 등): 연사가 있으면 연사형, 아무것도 없으면 행사명·일시·장소만 크게 보이는 사진형(배경 무늬)
+    return "speakers" if speakers else "photo"
 
 
 def paragraphs(text):
@@ -173,13 +191,38 @@ def paragraphs(text):
     return "".join(f"<p>{esc(p)}</p>" for p in parts)
 
 
-def build_poster(site_dir, layout=None, size=None, lang=None, theme=None):
+def build_poster(site_dir, layout=None, size=None, lang=None, theme=None, draft=False):
+    """draft=True: 샘플(시안) 포스터. 아직 채우지 않은 필수 항목이 있어도 만들고, 빈 칸은 '미정'으로, 모서리에 '시안' 표시를 넣는다.
+    (홈페이지가 다 만들어지기 전에 주관자에게 보여 줄 시안용. 자료에 없는 내용을 지어 넣지는 않는다.)"""
     data = json.loads((site_dir / "conference.json").read_text(encoding="utf-8"))
-    errors, _w = validate(data)
-    if errors:
-        raise SystemExit("conference.json 오류 — 먼저 고치세요:\n  " + "\n  ".join(errors))
-    poster = data.get("poster") or {}
+    if not isinstance(data, dict):
+        raise SystemExit("conference.json 은 {...} 객체여야 합니다")
     warnings = []
+    if not draft:
+        try:
+            errors, _w = validate(data)
+        except Exception as e:  # noqa: BLE001 — 형식이 크게 어긋난 자료
+            errors = [f"형식이 맞지 않는 항목이 있습니다 ({type(e).__name__}: {e})"]
+        if errors:
+            raise SystemExit("conference.json 오류 — 먼저 고치세요(또는 샘플 시안으로 만드세요: --draft):\n  " + "\n  ".join(errors))
+    else:
+        # 시안: 형식이 어긋난 칸은 비운 것으로 보고 계속한다(검사 결과는 경고로 알려 줌)
+        try:
+            errors, _w = validate(copy.deepcopy(data))
+        except Exception as e:  # noqa: BLE001 — 형식이 크게 어긋난 자료
+            errors = [f"형식이 맞지 않는 항목이 있습니다 ({type(e).__name__})"]
+        for k in ("title", "dates", "venue", "registration", "poster", "hero"):
+            if not isinstance(data.get(k), (dict, str)) or data.get(k) == "" or (k not in ("title",) and isinstance(data.get(k), str)):
+                data[k] = {}
+        for k in ("program", "speakers", "sponsors", "contact"):
+            data[k] = [x for x in data.get(k) or [] if isinstance(x, dict)] if isinstance(data.get(k), list) else []
+        for day in data["program"]:
+            if not isinstance(day.get("items"), list):
+                day["items"] = []
+            day["items"] = [x for x in day["items"] if isinstance(x, dict)]
+        if errors:
+            warnings.append(f"시안: 아직 채우지 않았거나 확인이 필요한 항목 {len(errors)}건 — " + " / ".join(errors[:5]) + (" …" if len(errors) > 5 else ""))
+    poster = data.get("poster") or {}
     if not layout:
         layout = pick_layout(data)
     elif layout == "auto":
@@ -198,7 +241,7 @@ def build_poster(site_dir, layout=None, size=None, lang=None, theme=None):
 
     # ---- 공통 조각 ----
     title_src = poster.get("headline") or data.get("title") or {}
-    title = T.t(title_src)
+    title = T.t(title_src) or (T.ui("title_tba") if draft else "")
     lines = [ln.strip() for ln in title.split("\n") if ln.strip()] or [title]
     title_html = "".join(f'<span class="line">{esc(ln)}</span>' for ln in lines)
     title_en = T.t2(data.get("title"))
@@ -207,10 +250,10 @@ def build_poster(site_dir, layout=None, size=None, lang=None, theme=None):
 
     d = data.get("dates") or {}
     start, end = d.get("start") or "", d.get("end") or ""
-    date_txt = T.t(d.get("display")) or (f"{start} – {end}" if end and end != start else start)
+    date_txt = T.t(d.get("display")) or (f"{start} – {end}" if end and end != start else start) or T.ui("tba")
     date_en = T.t2(d.get("display"))
     v = data.get("venue") or {}
-    venue_txt = " ".join(x for x in [T.t(v.get("name")), T.t(v.get("room"))] if x)
+    venue_txt = " ".join(x for x in [T.t(v.get("name")), T.t(v.get("room"))] if x) or T.ui("tba")
     venue_en = " ".join(x for x in [T.t2(v.get("name")), T.t2(v.get("room"))] if x)
     when_where = (
         '<dl class="when-where">'
@@ -269,7 +312,9 @@ def build_poster(site_dir, layout=None, size=None, lang=None, theme=None):
         days = []
         for day in data.get("program") or []:
             rows = []
-            for it in day.get("items") or []:
+            if not [it for it in day.get("items") or [] if filled_item(it)] and not T.t(day.get("label")) and not day.get("date"):
+                continue  # 빈 양식 날짜
+            for it in [x for x in day.get("items") or [] if filled_item(x)]:
                 soft = it.get("kind") in ("registration", "break", "meal", "social", "meeting")
                 spk = speakers.get(it.get("speaker_id")) if it.get("speaker_id") else None
                 ttl = (T.t(spk.get("title")) if spk else "") or T.t(it.get("title"))
@@ -355,6 +400,7 @@ def build_poster(site_dir, layout=None, size=None, lang=None, theme=None):
             credit = T.t((data.get("hero") or {}).get("credit"))
             photo_html = f'<div class="photo"><img src="{esc(img)}" alt=""></div>' + (f'<div class="credit">{esc(credit)}</div>' if credit else "")
         else:
+            extra_class += " no-photo"
             warnings.append("사진형: 대표 사진(hero.image 또는 poster.image)이 없어 배경 무늬로 대신했습니다")
         hl = [T.t(x) for x in poster.get("highlights") or [] if T.t(x)]
         if not hl:
@@ -384,8 +430,9 @@ def build_poster(site_dir, layout=None, size=None, lang=None, theme=None):
 </head>
 <body>
 <div class="fit-warning">내용이 많아 포스터에 다 들어가지 않습니다. 글자를 줄여도 넘치는 부분이 있으니, 프로그램을 줄이거나 다른 배치(--layout)나 더 큰 용지(--size)를 쓰세요.</div>
-<main class="poster layout-{layout}{extra_class}" data-layout="{layout}" data-size="{size}">
-<div class="poster-bg"><div class="grad"></div>{background_svg(data.get("slug", "site"))}</div>
+<main class="poster layout-{layout}{extra_class}" data-layout="{layout}" data-size="{size}"{' data-draft="1"' if draft else ""}>
+<div class="poster-bg"><div class="grad"></div>{background_svg(data.get("slug") or "site")}</div>
+{f'<div class="draft-mark">{esc(T.ui("draft"))}</div>' if draft else ""}
 {photo_html}
 <div class="inner">{body}</div>
 {foot}
@@ -396,7 +443,7 @@ def build_poster(site_dir, layout=None, size=None, lang=None, theme=None):
 </body>
 </html>
 """
-    return doc, {"layout": layout, "size": size, "lang": lang, "warnings": warnings, "paper_mm": (w_mm, h_mm), "url": url, "qr": bool(qr)}
+    return doc, {"layout": layout, "size": size, "lang": lang, "warnings": warnings, "paper_mm": (w_mm, h_mm), "url": url, "qr": bool(qr), "draft": bool(draft)}
 
 
 def export(html_path, info, want_pdf=True, want_png=True):
@@ -445,15 +492,16 @@ def main():
     ap.add_argument("--all", action="store_true", help="네 가지 배치를 모두 만든다")
     ap.add_argument("--out", help="결과 폴더 (기본 dist/<slug>/poster)")
     ap.add_argument("--no-pdf", action="store_true")
+    ap.add_argument("--draft", action="store_true", help="샘플(시안): 빈 칸이 있어도 만들고 '미정'·'시안' 표시")
     args = ap.parse_args()
     site = Path(args.site_dir)
     data = json.loads((site / "conference.json").read_text(encoding="utf-8"))
-    out_dir = Path(args.out) if args.out else ROOT / "dist" / data.get("slug", site.name) / "poster"
+    out_dir = Path(args.out) if args.out else ROOT / "dist" / (data.get("slug") or site.name) / "poster"
     out_dir.mkdir(parents=True, exist_ok=True)
     layouts = list(LAYOUTS) if args.all else [args.layout or None]
     for lay in layouts:
-        doc, info = build_poster(site, lay, args.size, args.lang, args.theme)
-        name = f"poster-{info['layout']}-{info['size']}-{info['lang']}.html"
+        doc, info = build_poster(site, lay, args.size, args.lang, args.theme, draft=args.draft)
+        name = f"poster-{info['layout']}-{info['size']}-{info['lang']}{'-draft' if args.draft else ''}.html"
         path = out_dir / name
         path.write_text(doc, encoding="utf-8")
         res = {"pdf": None, "png": None, "overflow": None, "note": ""} if args.no_pdf else export(path, info)

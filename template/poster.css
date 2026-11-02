@@ -24,6 +24,11 @@ body { background: #5b5e66; }
 .poster > .inner { position: relative; z-index: 1; flex: 1; min-height: 0; display: flex; flex-direction: column;
   padding: calc(var(--u) * 6.5) calc(var(--u) * 6.5) 0; }
 
+/* 샘플(시안) 표시 — make_poster.py --draft */
+.draft-mark { position: absolute; z-index: 3; top: calc(var(--u) * 2.2); right: calc(var(--u) * 2.2);
+  padding: calc(var(--u) * .5) calc(var(--u) * 1.6); border: calc(var(--u) * .25) solid var(--p-accent); border-radius: 999px;
+  color: var(--p-accent); background: rgba(0, 0, 0, .18); font-weight: 800; letter-spacing: .12em; font-size: calc(var(--u) * 1.5); }
+
 /* text pieces */
 .kicker { font-weight: 700; letter-spacing: .04em; color: var(--p-accent); font-size: calc(var(--u) * 2); margin: 0 0 calc(var(--u) * 1.6); }
 .kicker .sep { opacity: .5; margin: 0 .5em; }
@@ -95,6 +100,9 @@ body { background: #5b5e66; }
 /* photo layout */
 .layout-photo .poster-bg .grad { background: var(--p-deep); }
 .layout-photo .poster-bg svg { display: none; }
+/* 사진이 없으면 다른 배치처럼 그라데이션 + 무늬 */
+.layout-photo.no-photo .poster-bg .grad { background: linear-gradient(160deg, var(--p-deep) 0%, var(--p-mid) 58%, var(--p-end) 100%); }
+.layout-photo.no-photo .poster-bg svg { display: block; }
 .layout-photo .photo { position: absolute; left: 0; right: 0; top: 0; height: 64%; z-index: 0; }
 .layout-photo .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .layout-photo .photo::after { content: ""; position: absolute; inset: 0;
