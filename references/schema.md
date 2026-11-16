@@ -63,7 +63,24 @@
 | `address` | ko/en, 우편 주소 |
 | `map_url` | 지도 링크. 구글 지도 검색 링크(`https://www.google.com/maps/search/?api=1&query=...`)나 네이버 지도 공유 링크 |
 | `lat`, `lng` | 숫자, 행사장 좌표. 구글 지도에서 건물을 우클릭하면 맨 위에 나오는 두 숫자(위도, 경도). 넣으면 오시는 길 카드에 지도(OpenStreetMap)가 삽입된다 |
-| `directions` | ko/en, 대중교통·주차 안내 (빈 줄로 문단 구분) |
+| `directions` | ko/en, 대중교통·주차 안내 (빈 줄로 문단 구분). `routes` 가 있으면 경로 카드 위의 안내 문단으로 쓰인다 |
+| `map_query` | 장소 이름(예: `서울대학교 상산수리과학관`). 넣으면 구글 지도 검색 결과가 삽입된다. 좌표를 확인하지 못했을 때 좌표 대신 쓴다 |
+| `campus_map_url` | 캠퍼스·건물 배치도 링크(공식 PDF 등) → "캠퍼스 지도" 버튼 |
+| `routes` | 이동 방법 카드 목록. `{ "icon": "plane/subway/bus/taxi/walk", "title": ko/en, "subtitle": ko/en, "steps": [ko/en, …], "note": ko/en, "source": "공식 안내 주소", "source_label": ko/en, "card": { "label": ko/en, "text": ko/en } }`. `card` 는 택시 기사님께 보여 드리는 칸(줄바꿈 가능) |
+| `campus_map` | 캠퍼스 안 길 안내 그림 `{ "src": "assets/campus-map.png", "caption": ko/en, "legend": [ { "color": "#d33", "label": ko/en } ] }` — 직접 그린 경로 그림이나 공식 배치도를 쓰세요 |
+
+**교통 정보는 공식 안내(학교·운송사·지하철/버스 기관)에서 확인한 것만** 적고, 확인하지 못한 시간·승강장 번호는 쓰지 않습니다. 각 카드의 `source` 에 근거 주소를 남기면 방문자가 직접 확인할 수 있습니다.
+
+## 홈페이지 하단·프로그램 탭에 쓰는 항목
+
+| 키 | 설명 |
+|----|------|
+| `sponsors` / `sponsors_note` | 지원 기관. 로고(`logo`)는 **그 기관의 공식 웹사이트가 제공하는 공식 로고(CI/BI 내려받기 페이지 등)만** 쓰고, 모양을 바꾸거나 다른 곳에서 구한 파일을 쓰지 않습니다. 기관이 확정되기 전에는 `sponsors_note` 에 "지원 기관은 확정되는 대로 안내드립니다." 처럼 적어 두면 "지원 기관" 칸에 표시됩니다 |
+| `gallery` | 단체 사진 등. 한 장이면 크게 표시 |
+| `published_poster` | 홈페이지 맨 아래 포스터 `{ "image": "assets/poster.jpg", "pdf": "assets/poster.pdf", "caption": ko/en }`. `make_poster.py` 로 만든 PNG 를 줄여서(가로 1200px 안팎 JPG) `assets/` 에 넣습니다. **일정이 바뀌면 포스터도 다시 만들어 교체**하세요 |
+| `abstract_book` | `{ "file": "assets/abstract-book.pdf" }` — 넣으면 프로그램 탭 맨 위에 "초록집" 카드가 생깁니다. 파일은 `python3 scripts/make_abstract_book.py sites/<slug>` 로 만듭니다 |
+
+홈페이지는 **홈 · 프로그램 · 등록 · 오시는 길** 탭으로 나뉩니다. 예전 주소(`#program`, `#speakers`, `#venue`, `#spk-<id>`)는 그대로 통하고, 해당 탭으로 자동 이동합니다.
 
 ## speakers
 

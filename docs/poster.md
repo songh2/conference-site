@@ -106,7 +106,7 @@ python3 scripts/make_poster.py sites/<slug> --theme snu-science   # 이 포스�
 | 항목 | 뜻 |
 |---|---|
 | `site_url` (최상위) | 홈페이지 주소. **QR 코드**가 이 주소로 만들어집니다. 포스터만 다른 주소로 보내려면 `poster.url` |
-| `layout` | `program` / `speakers` / `lecture` / `photo` / `auto` |
+| `layout` | `program` / `speakers` / `lecture` / `photo` / `classic` / `auto`. `classic` 은 흰 바탕·남색 큰 제목·원형 "연사" 배지와 연사 명단(소속 포함)이며 사진이 있으면 아래쪽에 번지듯 들어갑니다(국제 워크숍용). 자동 선택에는 쓰이지 않으니 `--layout classic` 으로 지정하세요 |
 | `size` | `A1` 594×841 · `A2` 420×594 · `A3` 297×420 · `A4` 210×297 (mm, 세로) |
 | `lang` | `ko` 한국어 / `en` 영어 / `both` 한국어 중심 + 영어 병기 |
 | `headline` | 포스터 제목을 행사명과 다르게 쓰거나 줄을 직접 나눌 때 (`\n` 이 줄바꿈, 짝수 줄은 강조색) |

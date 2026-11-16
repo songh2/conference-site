@@ -14,6 +14,7 @@
     speakers  연사형   — 기조·초청 연사 명단 중심 (연구발표회)
     lecture   강연형   — 연사 한 명의 사진·강연 제목·초록 (대중강연·콜로키움)
     photo     사진형   — 대표 사진을 크게, 주요 행사 목록 (총회·축제형)
+    classic   명단형   — 흰 바탕에 남색 큰 제목, 원형 '연사' 배지와 연사 명단(소속 포함), 사진은 있으면 아래쪽에 번지듯 (국제 워크숍)
     auto      자동 선택 (기본값)
 
 결과: dist/<slug>/poster/ 에
@@ -42,7 +43,7 @@ from themes import resolve_theme, DEFAULTS  # noqa: E402
 from validate import validate  # noqa: E402
 
 PAPER = {"A1": (594, 841), "A2": (420, 594), "A3": (297, 420), "A4": (210, 297)}
-LAYOUTS = ("program", "speakers", "lecture", "photo")
+LAYOUTS = ("program", "speakers", "lecture", "photo", "classic")
 SANS = '"Noto Sans KR", "Noto Sans CJK KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif'
 SERIF = '"Noto Serif KR", "Noto Serif CJK KR", "Nanum Myeongjo", serif'
 
@@ -391,6 +392,25 @@ def build_poster(site_dir, layout=None, size=None, lang=None, theme=None, draft=
                 + (f'<section class="fit" data-max-k="1.7"><div class="fit-body abstract"><h2 class="section-label">{esc(T.ui("abstract"))}</h2>{paragraphs(abstract)}</div></section>' if abstract else '<div style="flex:1"></div>'))
         if not photo:
             warnings.append("강연형: 연사 사진(speakers[].photo)이 없어 사진 없이 만들었습니다")
+
+    elif layout == "classic":
+        extra_class = " layout-classic"
+        img_ref = poster.get("image") or (data.get("hero") or {}).get("image")
+        img = data_uri(site_dir, img_ref, warnings, "대표 사진") if img_ref else ""
+        if img:
+            photo_html = f'<div class="photo"><img src="{esc(img)}" alt=""></div>'
+        rows = []
+        for sp in data.get("speakers") or []:
+            if not sp.get("name"):
+                continue
+            nm, nm_en, aff = T.t(sp.get("name")), T.t2(sp.get("name")), T.t(sp.get("affiliation"))
+            rows.append('<div class="person">'
+                        f'<span class="n">{esc(nm)}</span>' + (f'<span class="n-en">{esc(nm_en)}</span>' if nm_en else "")
+                        + (f'<span class="a{" plain" if "(" in aff else ""}">{esc(aff)}</span>' if aff else "") + "</div>")
+        if not rows:
+            warnings.append("speakers 가 비어 있어 명단형 포스터에 명단이 없습니다")
+        badge = f'<div class="spk-badge"><span>{esc(T.ui("speakers"))}</span></div>'
+        body = head_block + when_where + note_html + f'<section class="fit"><div class="fit-body">{badge}<div class="spk-list">{"".join(rows)}</div></div></section>'
 
     elif layout == "photo":
         extra_class = " layout-photo"

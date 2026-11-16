@@ -75,6 +75,8 @@ python3 scripts/build.py sites/<slug> --deploy dist/<slug>
 ```bash
 python3 scripts/make_poster.py sites/<slug>                 # poster 설정대로 (없으면 자동 배치, A2, 한/영)
 python3 scripts/make_poster.py sites/<slug> --all           # program·speakers·lecture·photo 네 배치 비교
+python3 scripts/make_poster.py sites/<slug> --layout classic  # 흰 바탕·연사 명단형(국제 워크숍)
+python3 scripts/make_abstract_book.py sites/<slug>          # 초록집 PDF (연사 제목·초록을 한 권으로, dist/<slug>/abstract-book/)
 python3 scripts/make_poster.py sites/<slug> --layout lecture --size A3 --lang ko
 ```
 - 결과 `dist/<slug>/poster/*.pdf`(인쇄용), `*.png`(미리보기), `*.html`. PDF 는 Playwright, QR 코드는 segno 가 있어야 만들어진다(없으면 HTML 과 경고만). 없는 패키지는 설치를 시도하고(`pip install segno playwright`), 안 되면 그 사실을 알린다.

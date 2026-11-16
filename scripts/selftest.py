@@ -259,6 +259,7 @@ def main():
 
     print("10. OpenDesign 앱용 파일 (open-design/)")
     selftest_open_design_repo()
+    selftest_tabs_venue_book()
     print("9. 홈페이지 주소로 샘플 포스터")
     selftest_fetch_and_draft()
     print("FAILED %d" % fails if fails else "ALL PASSED")
@@ -356,6 +357,27 @@ def selftest_open_design_repo():
        and all((ROOT / "web" / "opendesign" / "craft" / f"{n}.md").is_file() for n in names) and len(sk.split("---", 2)[2].strip()) > 500,
        f"OpenDesign 포스터 스킬 SKILL.md (craft {names})")
     ok(len(list((ROOT).rglob("SKILL.md"))) == 2, "SKILL.md 는 저장소 맨 위(스킬)와 open-design/skills/conference-poster 두 개뿐 — OpenDesign 의 GitHub 설치가 헷갈리지 않음")
+
+
+def selftest_tabs_venue_book():
+    """탭 구조·오시는 길 경로 카드·포스터 이미지·초록집 (새 홈페이지 구성)."""
+    print("11. 탭·오시는 길·초록집")
+    import json, tempfile
+    from make_abstract_book import build as build_book
+    data = json.loads((ROOT / "sites" / "example-2027" / "conference.json").read_text(encoding="utf-8"))
+    doc, info = build_book(data, "ko")
+    titles = [s.get("title", {}).get("ko") for s in data.get("speakers") or [] if s.get("title", {}).get("ko")]
+    ok(info["talks"] == len(data.get("speakers") or []) and all(t.split("$")[0].strip()[:8] in doc for t in titles), "초록집: 연사 수와 강연 제목이 모두 들어감")
+    ok("추후 공지" in doc or info["missing_abstracts"] == 0, "초록집: 초록이 없으면 '추후 공지' 로 표시")
+    app_js = (ROOT / "template" / "app.js").read_text(encoding="utf-8")
+    ok("function route(" in app_js and "hashchange" in app_js and "data-tab" in app_js, "탭 라우터(해시 주소 호환) 포함")
+    from validate import validate
+    bad = dict(data, venue=dict(data.get("venue") or {}, routes=[{"title": {"ko": "가", "en": "A"}, "steps": []}]))
+    errs, _w = validate(bad)
+    ok(any("venue.routes" in e for e in errs), "venue.routes 의 steps 가 비어 있으면 오류")
+    good = dict(data, venue=dict(data.get("venue") or {}, routes=[{"title": {"ko": "가", "en": "A"}, "steps": [{"ko": "하나", "en": "one"}], "source": "https://example.org"}]))
+    errs, _w = validate(good)
+    ok(not errs, "venue.routes 올바른 형식은 통과")
 
 
 def io_sink():

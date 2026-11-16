@@ -647,7 +647,7 @@ const CUSTOM = {
     box.appendChild(h('p', { class: 'f-help', text: '글은 모두 위에서 입력한 행사 정보에서 가져옵니다. 만든 뒤 "새 창에서 열기"를 누르고 Ctrl+P → 대상 "PDF로 저장", 여백 "없음", "배경 그래픽" 켜기로 저장하세요.' }));
     const p = state.data.poster || {};
     const sel = (opts, v) => { const s = h('select', { class: 'f-input f-short' }, opts.map(([a, b]) => h('option', { value: a, text: b }))); s.value = v; return s; };
-    const lay = sel([['auto', '자동'], ['program', '일정표형'], ['speakers', '연사형'], ['lecture', '강연형'], ['photo', '사진형']], p.layout || 'auto');
+    const lay = sel([['auto', '자동'], ['program', '일정표형'], ['speakers', '연사형'], ['lecture', '강연형'], ['photo', '사진형'], ['classic', '명단형(흰 바탕)']], p.layout || 'auto');
     const size = sel([['A2', 'A2'], ['A1', 'A1'], ['A3', 'A3'], ['A4', 'A4']], (p.size || 'A2').toUpperCase());
     const lang = sel([['both', '한국어 + 영어'], ['ko', '한국어'], ['en', 'English']], p.lang || 'both');
     const th = sel([['', '홈페이지와 같은 배색']].concat(state.themes.map((t) => [t.id, (t.name && t.name.ko) || t.id])), '');

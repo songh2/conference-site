@@ -173,6 +173,36 @@ def validate(data):
         elif slides:
             check_url(f"{p}.slides", slides, warnings)
 
+    # 홈페이지 표시용 포스터 이미지, 초록집, 오시는 길(경로 카드·캠퍼스 지도), 후원 기관
+    for key, fields in (("published_poster", ("image", "pdf")), ("abstract_book", ("file",))):
+        obj = data.get(key)
+        if isinstance(obj, dict):
+            for f in fields:
+                check_url(f"{key}.{f}", obj.get(f), warnings)
+        elif obj:
+            errors.append(f"{key} 는 {{...}} 형태여야 합니다")
+    venue = data.get("venue") or {}
+    for i, r in enumerate(venue.get("routes") or []):
+        p = f"venue.routes[{i}]"
+        if not isinstance(r, dict):
+            errors.append(f"{p} 는 {{title, steps}} 형태여야 합니다")
+            continue
+        check_bilingual(f"{p}.title", r.get("title"), errors, warnings, required=True)
+        steps = r.get("steps")
+        if not isinstance(steps, list) or not steps:
+            errors.append(f"{p}.steps 는 한/영 문장의 목록이어야 합니다")
+        else:
+            for j, st in enumerate(steps):
+                check_bilingual(f"{p}.steps[{j}]", st, errors, warnings, required=True)
+        check_url(f"{p}.source", r.get("source"), warnings)
+    cm = venue.get("campus_map")
+    if isinstance(cm, dict):
+        check_url("venue.campus_map.src", cm.get("src"), warnings)
+    for i, sp in enumerate(data.get("sponsors") or []):
+        if isinstance(sp, dict):
+            check_url(f"sponsors[{i}].logo", sp.get("logo"), warnings)
+            check_url(f"sponsors[{i}].url", sp.get("url"), warnings)
+
     for i, day in enumerate(data.get("program") or []):
         check_iso(f"program[{i}].date", day.get("date"), errors, allow_empty=False)
         if "label" in day:
