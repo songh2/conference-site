@@ -784,7 +784,13 @@
   function refreshParticipants() {
     var old = document.getElementById('participants');
     var fresh = renderParticipants(state.data);
-    if (old && fresh && old.parentNode) { old.parentNode.replaceChild(fresh, old); return; }
+    if (old && fresh && old.parentNode) {
+      // The replacement must keep the tab of the section it replaces, otherwise it shows on every tab.
+      fresh.setAttribute('data-tab', old.getAttribute('data-tab') || 'registration');
+      old.parentNode.replaceChild(fresh, old);
+      applyTab();
+      return;
+    }
     render();
   }
 
