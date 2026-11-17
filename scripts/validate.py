@@ -114,8 +114,6 @@ def validate(data):
                 errors.append("venue.lat/lng 범위가 이상합니다 (위도 -90~90, 경도 -180~180)")
         except (TypeError, ValueError):
             errors.append("venue.lat/lng 는 숫자여야 합니다 (예: 37.4596, 126.9522)")
-    if v.get("routes"):
-        warnings.append("venue.routes 는 더 이상 사용되지 않는 항목입니다(출발지별 길찾기 기능 제거). 지워도 됩니다")
 
     # 참가자 명단
     for i, pt in enumerate(data.get("participants") or []):
